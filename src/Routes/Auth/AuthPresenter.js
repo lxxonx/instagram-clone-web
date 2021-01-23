@@ -57,10 +57,11 @@ function AuthPresenter({
   setAction,
   action,
   username,
+  emailOrUsername,
   firstname,
-  lastname,
-  email,
-  onLogin,
+  password,
+  emailOrPhone,
+  onSubmit,
 }) {
   return (
     <>
@@ -68,16 +69,17 @@ function AuthPresenter({
         <Title />
         <Form>
           {action === "logIn" ? (
-            <form name="logIn" onSubmit={onLogin}>
-              <Input placeholder={USERNAME} {...username} />
+            <form name="logIn" onSubmit={onSubmit}>
+              <Input placeholder={USERNAME} {...emailOrUsername} />
+              <Input placeholder={"password"} type="password" {...password} />
               <Button text={"Log in"} />
             </form>
           ) : (
-            <form name="signUp" onSubmit={onLogin}>
+            <form name="signUp" onSubmit={onSubmit}>
+              <Input placeholder={"Email or Phone Number"} {...emailOrPhone} />
               <Input placeholder={"First name"} {...firstname} />
-              <Input placeholder={"Last name"} {...lastname} />
-              <Input placeholder={"Email"} {...email} />
               <Input placeholder={"Username"} {...username} />
+              <Input placeholder={"password"} type="password" {...password} />
               <Button text={"Sign up"} />
             </form>
           )}

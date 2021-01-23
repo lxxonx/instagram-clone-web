@@ -1,49 +1,73 @@
 import React, { useState } from "react";
+import { Redirect } from "react-router-dom";
+import { useMutation } from "react-apollo-hooks";
+import { toast } from "react-toastify";
 import useInput from "../../Hooks/useInput";
 import AuthPresenter from "./AuthPresenter";
-import { useMutation } from "react-apollo-hooks";
 import { LOG_IN, SIGN_UP } from "./AuthQueries";
-import { Redirect } from "react-router-dom";
-
 function AuthContainer() {
   const [action, setAction] = useState("logIn");
   const username = useInput("");
   const firstname = useInput("");
   const lastname = useInput("");
-  const email = useInput("");
+  const emailOrPhone = useInput("");
+  const password = useInput("");
+  const emailOrUsername = useInput("");
 
-  const [requestSecret, { error }] = useMutation(LOG_IN, {
-    variables: { email: email.value },
-  });
+  const [login] = useMutation(LOG_IN);
   const [createUser, { error: createUserError }] = useMutation(SIGN_UP, {
     variables: {
-      email: email.value,
+      emailOrPhone: emailOrPhone.value,
+      emailOrUsername: emailOrUsername.value,
       username: username.value,
       firstname: firstname.value,
       lastname: lastname.value,
+      password: password.value,
     },
   });
-  const onLogin = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     const {
       target: { name },
     } = e;
+
     switch (name) {
       case "logIn":
-        if (email !== "") {
-          try {
-            requestSecret();
-            return <Redirect to="/" />;
-          } catch {
-            console.log(error);
-          }
+        if (emailOrUsername !== "") {
+          await login({
+            variables: {
+              emailOrUsername: emailOrUsername.value,
+              password: password.value,
+            },
+            update: (_, { data }) => {
+              const { login } = data;
+              if (login.error) {
+                toast.error(
+                  <>
+                    {login.error.message}
+                    <br />
+                    Please sign up first!
+                  </>,
+                  { autoClose: 3000 }
+                );
+                setTimeout(() => setAction("signUp"), 1000);
+              } else {
+                toast.success(
+                  <>
+                    welcome <b>{login.user.username}</b>
+                  </>
+                );
+              }
+            },
+          });
+          return <Redirect to="/" />;
         }
         break;
 
       default:
-        if (email !== "" && username !== "") {
+        if (emailOrPhone !== "" && username !== "") {
           try {
-            createUser();
+            await createUser();
             return <Redirect to="/" />;
           } catch {
             console.log(createUserError);
@@ -52,15 +76,17 @@ function AuthContainer() {
         break;
     }
   };
+
   return (
     <AuthPresenter
       setAction={setAction}
       action={action}
       username={username}
       firstname={firstname}
-      lastname={lastname}
-      email={email}
-      onLogin={onLogin}
+      emailOrUsername={emailOrUsername}
+      emailOrPhone={emailOrPhone}
+      password={password}
+      onSubmit={onSubmit}
     />
   );
 }
