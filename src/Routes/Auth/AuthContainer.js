@@ -4,27 +4,35 @@ import { useMutation } from "react-apollo-hooks";
 import { toast } from "react-toastify";
 import useInput from "../../Hooks/useInput";
 import AuthPresenter from "./AuthPresenter";
-import { LOG_IN, SIGN_UP } from "./AuthQueries";
+import { LOG_IN, SIGN_UP, WRITE_TOKEN } from "./AuthQueries";
+
 function AuthContainer() {
   const [action, setAction] = useState("logIn");
   const username = useInput("");
   const firstname = useInput("");
-  const lastname = useInput("");
   const emailOrPhone = useInput("");
   const password = useInput("");
   const emailOrUsername = useInput("");
-
-  const [login] = useMutation(LOG_IN);
-  const [createUser, { error: createUserError }] = useMutation(SIGN_UP, {
+  const [logUserIn] = useMutation(WRITE_TOKEN);
+  const [login] = useMutation(LOG_IN, {
     variables: {
-      emailOrPhone: emailOrPhone.value,
       emailOrUsername: emailOrUsername.value,
-      username: username.value,
-      firstname: firstname.value,
-      lastname: lastname.value,
       password: password.value,
     },
   });
+  const [createUser] = useMutation(SIGN_UP, {
+    variables: {
+      emailOrPhone: emailOrPhone.value,
+      username: username.value,
+      firstname: firstname.value,
+      password: password.value,
+    },
+  });
+
+  const toastError = (error) => {
+    toast.error(<b>{error.message}</b>, { autoClose: 3000 });
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     const {
@@ -34,29 +42,31 @@ function AuthContainer() {
     switch (name) {
       case "logIn":
         if (emailOrUsername !== "") {
+          // LOG IN FN
           await login({
-            variables: {
-              emailOrUsername: emailOrUsername.value,
-              password: password.value,
-            },
-            update: (_, { data }) => {
+            update: async (_, { data }) => {
               const { login } = data;
-              if (login.error) {
-                toast.error(
-                  <>
-                    {login.error.message}
-                    <br />
-                    Please sign up first!
-                  </>,
-                  { autoClose: 3000 }
-                );
-                setTimeout(() => setAction("signUp"), 1000);
-              } else {
+              if (!login.error) {
+                // there's no error => log the user in
+                if (login.token !== "" || login.token !== undefined) {
+                  await logUserIn({
+                    variables: {
+                      token: login.token,
+                    },
+                  });
+                } else {
+                  throw Error(
+                    "you can't log in. something wrong with the token"
+                  );
+                }
                 toast.success(
-                  <>
-                    welcome <b>{login.user.username}</b>
-                  </>
+                  <div>
+                    Welcome, <strong>{login.user.username}</strong>
+                  </div>
                 );
+              } else {
+                //there is an error then toast the error
+                toastError(login.error);
               }
             },
           });
@@ -64,14 +74,33 @@ function AuthContainer() {
         }
         break;
 
-      default:
+      case "signUp":
+        // SIGN UP FN
         if (emailOrPhone !== "" && username !== "") {
-          try {
-            await createUser();
-            return <Redirect to="/" />;
-          } catch {
-            console.log(createUserError);
-          }
+          await createUser({
+            update: async (_, { data }) => {
+              const { createUser } = data;
+              if (!createUser.error) {
+                // there is no error
+                // create the user && log the user in
+
+                toast.success(
+                  <div>
+                    Welcome, <strong>{createUser.user.username}</strong>
+                  </div>
+                );
+              } else {
+                //there is an error then toast the error
+                toastError(createUser.error);
+              }
+            },
+          });
+          return <Redirect to="/" />;
+        }
+        break;
+      default:
+        // FORGOT PASSWORD FN
+        if (emailOrPhone !== "") {
         }
         break;
     }

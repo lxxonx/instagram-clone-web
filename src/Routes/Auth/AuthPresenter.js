@@ -4,6 +4,11 @@ import Button from "../../Components/Button";
 import Footer from "../../Components/Footer";
 import Input from "../../Components/Input";
 
+const Title = styled.h1`
+  height: 100px;
+  width: 700px;
+  background-image: url("https://1000logos.net/wp-content/uploads/2017/02/Instagram-Logo.png");
+`;
 const Wrapper = styled.div`
   min-height: 100%;
   margin: 100px auto 100px;
@@ -17,21 +22,60 @@ const Box = styled.div`
   ${(props) => props.theme.whiteBox}
   border-radius:0px;
   width: 100%;
-  max-width: 350px;
+  max-width: 388px;
+`;
+
+const Divider = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  background-color: rgba(var(--b38, 219, 219, 219), 1);
+  height: 1px;
+  top: 0.45em;
+`;
+const DividerText = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  color: rgba(var(--f52, 142, 142, 142), 1);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 6px;
+  margin: 0 18px;
+  text-transform: uppercase;
+`;
+const DividerWrapper = styled.div`
+  margin: 18px 0px;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+`;
+
+const Help = styled.div`
+  color: ${(props) => props.theme.darkGreyColor};
+  text-align: center;
+  margin: 10px 0px;
+`;
+
+const ForgotPassword = styled(Box)`
+  border-color: white;
+  text-decoration: none;
+  color: rgba(var(--fe0, 0, 55, 107), 1);
+  font-size: 13px;
+  margin-top: 12px;
+  text-align: center;
+  text-transform: capitalize;
+  span {
+    color: ${(props) => props.theme.blackColor};
+  }
 `;
 const StateChanger = styled(Box)`
   text-align: center;
   padding: 20px 0px;
-`;
-
-const Link = styled.span`
-  color: ${(props) => props.theme.blueColor};
-  cursor: pointer;
-`;
-const Title = styled.h1`
-  height: 100px;
-  width: 700px;
-  background-image: url("https://1000logos.net/wp-content/uploads/2017/02/Instagram-Logo.png");
+  text-transform: capitalize;
 `;
 
 const Form = styled(Box)`
@@ -52,6 +96,13 @@ const Form = styled(Box)`
     }
   }
 `;
+
+const Link = styled.span`
+  color: ${(props) => props.theme.blueColor};
+  cursor: pointer;
+  font-weight: 600;
+`;
+
 const USERNAME = "전화번호, 사용자 이름 또는 이메일";
 function AuthPresenter({
   setAction,
@@ -68,13 +119,26 @@ function AuthPresenter({
       <Wrapper>
         <Title />
         <Form>
-          {action === "logIn" ? (
-            <form name="logIn" onSubmit={onSubmit}>
-              <Input placeholder={USERNAME} {...emailOrUsername} />
-              <Input placeholder={"password"} type="password" {...password} />
-              <Button text={"Log in"} />
-            </form>
-          ) : (
+          {action === "logIn" && (
+            <>
+              <form name="logIn" onSubmit={onSubmit}>
+                <Input placeholder={USERNAME} {...emailOrUsername} />
+                <Input placeholder={"password"} type="password" {...password} />
+                <Button text={"Log in"} />
+              </form>
+              <DividerWrapper>
+                <Divider />
+                <DividerText> 또는 </DividerText>
+                <Divider />
+              </DividerWrapper>
+              <ForgotPassword>
+                <Link onClick={() => setAction("forgotPassword")}>
+                  forgot password?
+                </Link>
+              </ForgotPassword>
+            </>
+          )}
+          {action === "signUp" && (
             <form name="signUp" onSubmit={onSubmit}>
               <Input placeholder={"Email or Phone Number"} {...emailOrPhone} />
               <Input placeholder={"First name"} {...firstname} />
@@ -83,22 +147,53 @@ function AuthPresenter({
               <Button text={"Sign up"} />
             </form>
           )}
+          {action === "forgotPassword" && (
+            <>
+              <Help>
+                Enter your email, phone, or username and we'll send you a link
+                to get back into your account.
+              </Help>
+              <form name="forgotPassword" onSubmit={onSubmit}>
+                <Input
+                  placeholder={"Email or Phone Number"}
+                  {...emailOrPhone}
+                />
+                <Button text={"Send Login Link"} />
+              </form>
+              <DividerWrapper>
+                <Divider />
+                <DividerText> Or </DividerText>
+                <Divider />
+              </DividerWrapper>
+              <ForgotPassword>
+                <Link onClick={() => setAction("signUp")}>
+                  Create new account
+                </Link>
+              </ForgotPassword>
+            </>
+          )}
         </Form>
         <StateChanger>
-          {action === "logIn" ? (
+          {action === "logIn" && (
             <>
               Don't have an account?
               <Link onClick={() => setAction("signUp")}> Sign up</Link>
             </>
-          ) : (
+          )}
+          {action === "signUp" && (
             <>
               Have an account?
               <Link onClick={() => setAction("logIn")}> Log in</Link>
             </>
           )}
+          {action === "forgotPassword" && (
+            <>
+              <Link onClick={() => setAction("logIn")}>Back to Login</Link>
+            </>
+          )}
         </StateChanger>
       </Wrapper>
-      <Footer signUpPage={action === "logIn" ? false : true} />
+      <Footer signUpPage={action === "signUp" ? true : false} />
     </>
   );
 }

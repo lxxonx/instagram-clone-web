@@ -1,7 +1,7 @@
 import React from "react";
 
-function Post() {
+function Search() {
   return <div></div>;
 }
 
-export default Post;
+export default Search;

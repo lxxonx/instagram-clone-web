@@ -25,4 +25,5 @@ export default createGlobalStyle`
     select:focus{
         outline:none;
     }
+  
 `;

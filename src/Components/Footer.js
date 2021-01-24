@@ -100,7 +100,7 @@ const Footer = ({ signUpPage }) => {
         </List>
       ) : null}
       <Copyright>
-        <Language href="#">language</Language> &copy; {new Date().getFullYear()}
+        <Language href="#">language</Language> &copy; {new Date().getFullYear()}{" "}
         Instaclone
       </Copyright>
     </FooterTag>
