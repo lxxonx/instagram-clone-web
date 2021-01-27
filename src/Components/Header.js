@@ -1,15 +1,21 @@
-import { gql } from "apollo-boost";
-import React from "react";
-import { useQuery } from "react-apollo-hooks";
-import { AiFillHome } from "react-icons/ai";
-import { BsHeart, BsPersonFill } from "react-icons/bs";
-import { ImCompass2 } from "react-icons/im";
-import { IoPaperPlaneOutline } from "react-icons/io5";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import Loader from "./Loader";
+import useMeQuery from "../Hooks/useMeQuery";
+import useWidth from "../Hooks/useWidth";
+import Avatar from "./Avatar";
+import {
+  CompassIcon,
+  CompassIconBlack,
+  EmptyHeartIcon,
+  FilledHeartIcon,
+  HomeIcon,
+  HomeIconBlack,
+  PaperPlaneIconBlack,
+  PaperPlaneIconWhite,
+} from "./Icons";
 
-const Nav = styled.nav`
+const Nav = styled.header`
   background-color: white;
   display: flex;
   margin-bottom: 30px;
@@ -29,13 +35,14 @@ const Box = styled.div`
   ${(props) => props.theme.whiteBox}
   display: flex;
   max-width: 975px;
+  padding: 0 20px;
   width: 100%;
   border: 0px;
   height: 100%;
   align-items: center;
   vertical-align: center;
 `;
-const LogoWrapper = styled.div`
+const LogoWrapper = styled(Link)`
   vertical-align: baseline;
   align-items: stretch;
   display: flex;
@@ -45,6 +52,7 @@ const LogoWrapper = styled.div`
   position: relative;
   flex: 1 9999 0%;
   min-width: 40px;
+  cursor: pointer;
 `;
 const TextLogo = styled.img`
   width: 108px;
@@ -95,49 +103,85 @@ const LinkWrapper = styled(Link)`
     margin-right: 22px;
   }
 `;
-
-const ME = gql`
-  query me {
-    me {
-      username
-    }
+const HeartButton = styled.button`
+  display: flex;
+  padding: 0;
+  cursor: pointer;
+  svg {
+    color: black;
+    width: 22px;
+    height: 22px;
+  }
+  &:not(:last-child) {
+    margin-right: 22px;
+  }
+  background-color: white;
+  border: 0;
+  :focus {
+    outline: none;
   }
 `;
 
 function Header() {
-  const { data, loading } = useQuery(ME);
+  const { data, loading } = useMeQuery();
+  const { pathname } = useLocation();
+  const [filled, setFilled] = useState(false);
+  const [borderAvatar, setborderAvatar] = useState(false);
+  const width = useWidth();
   return (
     <>
-      {loading ? (
-        <></>
-      ) : (
+      {!loading && data && data.me ? (
         <Nav>
           <Box>
-            <LogoWrapper>
+            <LogoWrapper to="/">
               <TextLogo src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/1200px-Instagram_logo.svg.png" />
             </LogoWrapper>
-            <SearchBox />
+            {width < 600 ? null : <SearchBox />}
+
             <MenuBarWrapper>
               <MenuBar>
                 <LinkWrapper to="/">
-                  <AiFillHome />
+                  {pathname === "/" && !filled ? (
+                    <HomeIconBlack />
+                  ) : (
+                    <HomeIcon />
+                  )}
                 </LinkWrapper>
                 <LinkWrapper to="/direct/inbox">
-                  <IoPaperPlaneOutline />
+                  {pathname.startsWith("/direct/") && !filled ? (
+                    <PaperPlaneIconBlack />
+                  ) : (
+                    <PaperPlaneIconWhite />
+                  )}
                 </LinkWrapper>
-                <LinkWrapper to="/explore">
-                  <ImCompass2 />
+                <LinkWrapper to="/explore/">
+                  {pathname === "/explore/" && !filled ? (
+                    <CompassIconBlack />
+                  ) : (
+                    <CompassIcon />
+                  )}
                 </LinkWrapper>
-                <LinkWrapper to="/explore">
-                  <BsHeart />
-                </LinkWrapper>
-                <LinkWrapper to={!data ? "/#" : data.me.username}>
-                  <BsPersonFill />
+                <HeartButton
+                  onClick={() => {
+                    setFilled(!filled);
+                  }}
+                >
+                  {filled ? (
+                    <FilledHeartIcon color={"black"} />
+                  ) : (
+                    <EmptyHeartIcon />
+                  )}
+                </HeartButton>
+
+                <LinkWrapper to={!data ? "/" : `/${data.me.username}`}>
+                  <Avatar src={data.me.avatar} />
                 </LinkWrapper>
               </MenuBar>
             </MenuBarWrapper>
           </Box>
         </Nav>
+      ) : (
+        <></>
       )}
     </>
   );

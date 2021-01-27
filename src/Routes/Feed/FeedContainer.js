@@ -1,21 +1,34 @@
-import React, { useEffect, useRef, useState } from "react";
-import FeedStory from "./FeedStory";
+import { gql, useQuery } from "@apollo/client";
+import React from "react";
 import styled from "styled-components";
-import { useQuery } from "react-apollo-hooks";
-import { gql } from "apollo-boost";
-import { Link, useParams } from "react-router-dom";
-import { BiDotsHorizontalRounded } from "react-icons/bi";
+import Avatar from "../../Components/Avatar";
 import Loader from "../../Components/Loader";
+import useMeQuery from "../../Hooks/useMeQuery";
+import useWidth from "../../Hooks/useWidth";
+import FeedPostContainer from "../FeedPost/FeedPostContainer";
+import FeedStory from "../FeedStory";
 
 const FEED_QUERY = gql`
   query getFeed {
     getFeed {
+      id
       caption
       isLiked
       createdAt
       location
+      comments {
+        text
+        user {
+          username
+        }
+        createdAt
+        id
+      }
       likes {
         id
+        user {
+          username
+        }
       }
       photos {
         id
@@ -31,134 +44,110 @@ const FEED_QUERY = gql`
   }
 `;
 
-const Post = styled.article`
-  ${(props) => props.theme.whiteBox}
-  max-width: ${(props) => props.theme.postMaxWidth};
-  width: 100%;
-  align-items: center;
-  vertical-align: center;
-  margin-bottom: 60px;
-`;
-
-const PostHeader = styled.header`
-  align-items: center;
-  vertical-align: center;
-  height: 60px;
-  display: flex;
-  padding: 16px;
-`;
-const PostMenu = styled.div`
-  margin-right: 0;
-  padding: 8px;
-
-  cursor: pointer;
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`;
-const PostOwner = styled.div`
-  margin-left: 0;
-  display: flex;
-  align-items: center;
-  vertical-align: center;
-  flex: 1 9999 0%;
-`;
-const OwnerAvaCan = styled.canvas`
-  height: 42px;
-  width: 42px;
-`;
-
-const OwnerAva = styled(Link)`
-  height: 42px;
-  width: 42px;
-`;
-const OwnerName = styled(Link)`
-  color: ${(props) => props.theme.blackColor};
-  padding: 5px;
-`;
-const PostPhoto = styled.img`
-  width: 100%;
-  max-height: ${(props) => {
-    return `${parseInt(props.theme.postMaxWidth) * 1.001}px`;
+const Wrapper = styled.section`
+  padding-top: ${(props) => {
+    if (props.width < 640) {
+      return `0;`;
+    } else {
+      return `30px;`;
+    }
   }};
-  min-height: ${(props) => {
-    return `${parseInt(props.theme.postMaxWidth) * 0.998}px`;
-  }};
-  overflow: hidden;
+  max-width: 935px;
+  width: 100%;
+  display: flex;
   flex-direction: row;
-  object-fit: cover;
+  align-items: center;
+  vertical-align: top;
 `;
-const PostPhotoWrapper = styled.div`
-  display: flex;
-`;
-const Wrapper = styled.div`
-  max-width: ${(props) => props.theme.postMaxWidth};
-  width: 100%;
+const Feed = styled.div`
   display: flex;
   flex-direction: column;
+  ${(props) => {
+    if (props.width < 1000) {
+      return `margin:auto;`;
+    } else {
+      return `margin-right: 28px;`;
+    }
+  }}
+`;
+const Etc = styled.div`
+  ${(props) => props.theme.whiteBox};
+  background-color: ${(props) => props.theme.bgColor};
+  border: 0;
+  position: fixed;
+  left: ${(props) => props.width / 2 + 170}px;
+  top: 88px;
+`;
+const Me = styled.div`
+  margin-top: 20px;
+  display: flex;
+  flex-direction: row;
+  vertical-align: center;
   align-items: center;
 `;
-function FeedPost({ post }) {
-  const TOTAL_SLIDES = post.photos.length;
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const slideRef = useRef(null);
-  const nextSlide = () => {
-    if (currentSlide >= TOTAL_SLIDES) {
-      // 더 이상 넘어갈 슬라이드가 없으면 슬라이드를 초기화합니다.
-      setCurrentSlide(0);
-    } else {
-      setCurrentSlide(currentSlide + 1);
-    }
-  };
-  const prevSlide = () => {
-    if (currentSlide === 0) {
-      setCurrentSlide(TOTAL_SLIDES);
-    } else {
-      setCurrentSlide(currentSlide - 1);
-    }
-  };
-  useEffect(() => {
-    if (slideRef.current) {
-      slideRef.current.style.transition = "all 0.5s ease-in-out";
-      slideRef.current.style.transform = `translateX(-${currentSlide}00%)`;
-    }
-  }, [currentSlide]);
-  return (
-    <Post>
-      <PostHeader>
-        <PostOwner>
-          <OwnerAva to={post.user.username}>
-            {post.user.avatar ? "this is avatar" : "null"}
-          </OwnerAva>
-          <OwnerName to={post.user.username}>{post.user.username}</OwnerName>
-        </PostOwner>
-        <PostMenu>
-          <BiDotsHorizontalRounded />
-        </PostMenu>
-      </PostHeader>
-      <PostPhotoWrapper>
-        {post.photos.map((photo) => (
-          <PostPhoto src={photo.url} />
-        ))}
-      </PostPhotoWrapper>
-    </Post>
-  );
-}
+const MeInfo = styled.div`
+  margin-left: 20px;
+  display: flex;
+  flex-direction: column;
+`;
+const MeUsername = styled.div`
+  font-weight: 600;
+  font-size: 16px;
+`;
+const MeName = styled.div`
+  font-size: 18px;
+  color: ${(props) => props.theme.darkGreyColor};
+  font-weight: 300;
+`;
+const Loading = styled.div`
+  margin: 20px auto;
+  width: 100%;
+  align-items: center;
+`;
 function FeedContainer() {
-  const { loading, data } = useQuery(FEED_QUERY);
-
+  const { loading, data, fetchMore } = useQuery(FEED_QUERY, { variables: {} });
+  const {
+    data: { me },
+  } = useMeQuery();
+  const width = useWidth();
   return (
-    <Wrapper>
-      {loading ? (
-        <Loader />
-      ) : (
+    <Wrapper width={width}>
+      {!loading && data ? (
         <>
-          <FeedStory />
-          {data.getFeed.map((post) => (
-            <FeedPost post={post} key={post.id} />
-          ))}
+          <Feed width={width}>
+            <FeedStory />
+            {data.getFeed.map((post, index) => {
+              return (
+                <FeedPostContainer
+                  key={index}
+                  id={post.id}
+                  photos={post.photos}
+                  user={post.user}
+                  isLiked={post.isLiked}
+                  comments={post.comments}
+                  createdAt={post.createdAt}
+                  numberOfLikes={post.numberOfLikes}
+                  caption={post.caption}
+                />
+              );
+            })}
+          </Feed>
+          {width < 1000 ? null : (
+            <Etc width={width}>
+              <Me>
+                <Avatar src={me.avatar} size={56} />
+                <MeInfo>
+                  <MeUsername>{me.username}</MeUsername>
+                  <MeName>{me.fullname}</MeName>
+                </MeInfo>
+              </Me>
+            </Etc>
+          )}
         </>
+      ) : (
+        <Loading>
+          <Loader />
+        </Loading>
       )}
     </Wrapper>
   );

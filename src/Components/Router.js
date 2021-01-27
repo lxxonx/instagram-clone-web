@@ -12,25 +12,25 @@ const LoggedInRoutes = () => {
   return (
     <>
       <Header />
-      <Route exact path="/:username/" component={Profile} />
-      <Route exact path="/" component={Feed} />
-      <Route path="/explore/" component={Explore} />
-      <Route exact path="/search" component={Search} />
-      <Route exact path="/p/:postId/" component={Post} />
+      <Switch>
+        <Route exact path="/" component={Feed} />
+        <Route path="/explore" component={Explore} />
+        <Route path="/search" component={Search} />
+        <Route exact path="/:username" component={Profile} />
+        <Route path="/p/:postId/" component={Post} />
+      </Switch>
     </>
   );
 };
 const LoggedOutRoutes = () => {
   return (
-    <>
+    <Switch>
       <Route exact path="/" component={Auth} />
-    </>
+    </Switch>
   );
 };
 const AppRouter = ({ isLoggedIn }) => {
-  return (
-    <Switch>{isLoggedIn ? <LoggedInRoutes /> : <LoggedOutRoutes />}</Switch>
-  );
+  return <>{isLoggedIn ? <LoggedInRoutes /> : <LoggedOutRoutes />}</>;
 };
 
 AppRouter.propTypes = {

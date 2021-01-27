@@ -1,14 +1,13 @@
-import ApolloClient from "apollo-boost";
-import { defaults, resolvers } from "./LocalState";
+// import ApolloClient from "apollo-boost";
+import { ApolloClient } from "@apollo/client";
+import { resolvers, cache } from "./LocalState";
+
 const client = new ApolloClient({
   uri: "http://localhost:4000/",
-  clientState: {
-    defaults,
-    resolvers,
-  },
+  resolvers,
+  cache,
   headers: {
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
+    authorization: `Bearer ${localStorage.getItem("token")}`,
   },
 });
-
 export default client;

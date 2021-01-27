@@ -25,5 +25,7 @@ export default createGlobalStyle`
     select:focus{
         outline:none;
     }
-  
+    html{
+        overflow-y:scroll;
+    }
 `;

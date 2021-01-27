@@ -1,6 +1,6 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
-import { LOGO } from "./Icons";
+import { Logo } from "./Icons";
 
 const Animation = keyframes`
     0%{
@@ -19,7 +19,7 @@ const Loading = styled.div`
 const Loader = () => {
   return (
     <Loading>
-      <LOGO size={50} />
+      <Logo size={50} />
     </Loading>
   );
 };
