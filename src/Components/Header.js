@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, Redirect } from "react-router-dom";
 import styled from "styled-components";
 import useMeQuery from "../Hooks/useMeQuery";
 import useWidth from "../Hooks/useWidth";
@@ -72,6 +72,9 @@ const MenuBar = styled(Box)`
   margin: auto;
   margin-right: 0;
   display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
   width: 222px;
   flex: 0 0 auto;
   height: 22px;
@@ -91,8 +94,11 @@ const MenuBarWrapper = styled.div`
 `;
 const LinkWrapper = styled(Link)`
   display: flex;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 25px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
   cursor: pointer;
   svg {
     color: black;
@@ -102,6 +108,7 @@ const LinkWrapper = styled(Link)`
   &:not(:last-child) {
     margin-right: 22px;
   }
+  ${(props) => (props.borderAvatar ? `border: 1px solid black;` : null)}
 `;
 const HeartButton = styled.button`
   display: flex;
@@ -126,8 +133,17 @@ function Header() {
   const { data, loading } = useMeQuery();
   const { pathname } = useLocation();
   const [filled, setFilled] = useState(false);
-  const [borderAvatar, setborderAvatar] = useState(false);
+  const [borderAvatar, setBorderAvatar] = useState(false);
   const width = useWidth();
+
+  useEffect(() => {
+    if (pathname.startsWith(`/${data.me.username}`) && !filled) {
+      setBorderAvatar(true);
+    } else {
+      setBorderAvatar(false);
+    }
+    return () => {};
+  }, [pathname, filled]);
   return (
     <>
       {!loading && data && data.me ? (
@@ -136,6 +152,7 @@ function Header() {
             <LogoWrapper to="/">
               <TextLogo src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/1200px-Instagram_logo.svg.png" />
             </LogoWrapper>
+
             {width < 600 ? null : <SearchBox />}
 
             <MenuBarWrapper>
@@ -173,7 +190,18 @@ function Header() {
                   )}
                 </HeartButton>
 
-                <LinkWrapper to={!data ? "/" : `/${data.me.username}`}>
+                <LinkWrapper
+                  to={`/${data.me.username}`}
+                  onClick={(e) => {
+                    if (filled) {
+                      e.preventDefault();
+                      setBorderAvatar(false);
+                    } else {
+                      setBorderAvatar(true);
+                    }
+                  }}
+                  borderAvatar={borderAvatar}
+                >
                   <Avatar src={data.me.avatar} />
                 </LinkWrapper>
               </MenuBar>

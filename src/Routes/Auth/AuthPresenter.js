@@ -122,8 +122,17 @@ function AuthPresenter({
           {action === "logIn" && (
             <>
               <form name="logIn" onSubmit={onSubmit}>
-                <Input placeholder={USERNAME} {...emailOrUsername} />
-                <Input placeholder={"password"} type="password" {...password} />
+                <Input
+                  placeholder={USERNAME}
+                  value={emailOrUsername.value}
+                  onChange={emailOrUsername.onChange}
+                />
+                <Input
+                  placeholder={"password"}
+                  type="password"
+                  value={password.value}
+                  onChange={password.onChange}
+                />
                 <Button text={"Log in"} />
               </form>
               <DividerWrapper>
@@ -140,10 +149,27 @@ function AuthPresenter({
           )}
           {action === "signUp" && (
             <form name="signUp" onSubmit={onSubmit}>
-              <Input placeholder={"Email or Phone Number"} {...emailOrPhone} />
-              <Input placeholder={"First name"} {...firstname} />
-              <Input placeholder={"Username"} {...username} />
-              <Input placeholder={"password"} type="password" {...password} />
+              <Input
+                placeholder={"Email or Phone Number"}
+                value={emailOrPhone.value}
+                onChange={emailOrPhone.onChange}
+              />
+              <Input
+                placeholder={"First name"}
+                value={firstname.value}
+                onChange={firstname.onChange}
+              />
+              <Input
+                placeholder={"Username"}
+                value={username.value}
+                onChange={username.onChange}
+              />
+              <Input
+                placeholder={"password"}
+                type="password"
+                value={password.value}
+                onChange={password.onChange}
+              />
               <Button text={"Sign up"} />
             </form>
           )}
@@ -156,7 +182,8 @@ function AuthPresenter({
               <form name="forgotPassword" onSubmit={onSubmit}>
                 <Input
                   placeholder={"Email or Phone Number"}
-                  {...emailOrPhone}
+                  value={emailOrPhone.value}
+                  onChange={emailOrPhone.onChange}
                 />
                 <Button text={"Send Login Link"} />
               </form>

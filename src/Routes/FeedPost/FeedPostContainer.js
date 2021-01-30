@@ -28,44 +28,46 @@ function FeedPostContainer({
 }) {
   const newComment = useInput("");
   const [filled, setFilled] = useState(isLiked);
-  const [toggleLike, { data: likeData }] = useMutation(LIKE, {
-    variables: { postId: id },
-    update: (_, __, { cache }) => {
-      setFilled(!filled);
-      console.log("cache: ", cache);
-    },
-  });
-  const [addComment, { data }] = useMutation(ADD_COMMENT, {
-    variables: { text: newComment, postId: id },
-  });
-  console.log(data);
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    const {
-      target: { name },
-    } = e;
-    await addComment({ update: {} });
-  };
+  const [likesCount, setLikesCount] = useState(numberOfLikes);
   const width = useWidth();
   const timeAgo = timeSince(new Date(createdAt * 1));
-  // const TOTAL_SLIDES = photos.length;
-  // const [currentSlide, setCurrentSlide] = useState(0);
+  const [toggleLike] = useMutation(LIKE, {
+    variables: { postId: id },
+    update: () => {
+      filled ? setLikesCount(likesCount - 1) : setLikesCount(likesCount + 1);
+      setFilled(!filled);
+    },
+  });
+  const [addComment, { data, loading }] = useMutation(ADD_COMMENT, {
+    variables: { text: newComment.value, postId: id },
+  });
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    newComment.setValue("");
+    await addComment();
+  };
+  const onKeyDown = async (e) => {
+    const { keyCode } = e;
+    if (keyCode === 13) {
+      e.preventDefault();
+      newComment.setValue("");
+      console.log(keyCode);
+      await addComment();
+    }
+  };
   // const slideRef = useRef(null);
-  // const nextSlide = () => {
-  //   if (currentSlide >= TOTAL_SLIDES) {
-  //     // 더 이상 넘어갈 슬라이드가 없으면 슬라이드를 초기화합니다.
-  //     setCurrentSlide(0);
-  //   } else {
-  //     setCurrentSlide(currentSlide + 1);
-  //   }
-  // };
-  // const prevSlide = () => {
-  //   if (currentSlide === 0) {
-  //     setCurrentSlide(TOTAL_SLIDES);
-  //   } else {
-  //     setCurrentSlide(currentSlide - 1);
-  //   }
-  // };
+  const TOTAL_SLIDES = photos.length;
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const nextSlide = () => {
+    if (currentSlide !== TOTAL_SLIDES - 1) {
+      setCurrentSlide(currentSlide + 1);
+    }
+  };
+  const prevSlide = () => {
+    if (currentSlide !== 0) {
+      setCurrentSlide(currentSlide - 1);
+    }
+  };
   // useEffect(() => {
   //   if (slideRef.current) {
   //     slideRef.current.style.transition = "all 0.5s ease-in-out";
@@ -82,11 +84,15 @@ function FeedPostContainer({
       filled={filled}
       comments={comments}
       timeAgo={timeAgo}
-      numberOfLikes={numberOfLikes}
+      likesCount={likesCount}
       toggleLike={toggleLike}
       caption={caption}
       newComment={newComment}
       onSubmit={onSubmit}
+      onKeyDown={onKeyDown}
+      nextSlide={nextSlide}
+      prevSlide={prevSlide}
+      currentSlide={currentSlide}
     />
   );
 }

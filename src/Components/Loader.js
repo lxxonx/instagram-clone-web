@@ -14,8 +14,15 @@ const Animation = keyframes`
     }
 `;
 const Loading = styled.div`
+  padding-top: 100px;
+  margin: 20px auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   animation: ${Animation} 1s linear infinite;
 `;
+
 const Loader = () => {
   return (
     <Loading>

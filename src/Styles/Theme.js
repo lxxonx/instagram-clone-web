@@ -12,6 +12,7 @@ const Theme = {
   boxBorder: "1px solid #dbdbdb",
   borderRadius: "4px",
   postMaxWidth: "614px",
+  maxWidth: "935px",
   whiteBox: `border:${BOX_BORDER};
              border-radius:${BORDER_RADIUS};
              background-color:white;
