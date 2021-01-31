@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Link, useLocation, Redirect } from "react-router-dom";
+import { useQuery, gql, useMutation } from "@apollo/client";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import useMeQuery from "../Hooks/useMeQuery";
 import useWidth from "../Hooks/useWidth";
 import Avatar from "./Avatar";
 import {
@@ -14,7 +14,13 @@ import {
   PaperPlaneIconBlack,
   PaperPlaneIconWhite,
 } from "./Icons";
+import { ME } from "./SharedQueries";
 
+const LOGOUT = gql`
+  mutation logUserOut {
+    logUserOut @client
+  }
+`;
 const Nav = styled.header`
   background-color: white;
   display: flex;
@@ -93,9 +99,9 @@ const MenuBarWrapper = styled.div`
   justify-content: flex-end;
 `;
 const LinkWrapper = styled(Link)`
+  width: 100%;
+  color: black;
   display: flex;
-  width: 28px;
-  height: 25px;
   justify-content: center;
   align-items: center;
   border-radius: 50%;
@@ -108,7 +114,21 @@ const LinkWrapper = styled(Link)`
   &:not(:last-child) {
     margin-right: 22px;
   }
-  ${(props) => (props.borderAvatar ? `border: 1px solid black;` : null)}
+`;
+const AvatarButton = styled.button`
+  border: 1px solid white;
+  ${(props) => (props.borderAvatar ? `border: 1px solid black;` : null)};
+  display: flex;
+  width: 24px;
+  height: 24px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  cursor: pointer;
+  :focus {
+    outline: none;
+  }
+  padding: 0;
 `;
 const HeartButton = styled.button`
   display: flex;
@@ -128,86 +148,190 @@ const HeartButton = styled.button`
     outline: none;
   }
 `;
+const MenuWrapper = styled.div`
+  display: ${(props) => {
+    return props.showing ? `block` : `none`;
+  }};
+  position: absolute;
+  top: 50px;
+  right: ${(props) => props.xLocation}px;
+  z-index: 3;
+  width: ${(props) => props.width}px;
+  height: ${(props) => props.height}px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 6px;
+  box-shadow: 0 0 5px 1px rgba(var(--jb7, 0, 0, 0), 0.0975);
+  transform: translateY(0);
+  transition: opacity 75ms linear, transform 38ms ease-out,
+    -webkit-transform 38ms ease-out;
+  transform-origin: top center;
+  overflow-x: auto;
+  overflow-y: hidden;
+`;
 
+const Menu = styled.div`
+  align-items: stretch;
+  border: 0;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100%;
+  width: 100%;
+`;
+const MenuItem = styled.div`
+  text-transform: capitalize;
+  width: 100%;
+  height: 37px;
+  justify-content: flex-start;
+  align-items: center;
+  display: flex;
+  padding: 8px 16px;
+  font-size: 16px;
+  :hover {
+    background-color: ${(props) => props.theme.lightGreyColor};
+  }
+`;
 function Header() {
-  const { data, loading } = useMeQuery();
+  const { data, loading } = useQuery(ME);
   const { pathname } = useLocation();
   const [filled, setFilled] = useState(false);
-  const [borderAvatar, setBorderAvatar] = useState(false);
+  const [profileborder, setProfileBorder] = useState(false);
   const width = useWidth();
-
-  useEffect(() => {
-    if (pathname.startsWith(`/${data.me.username}`) && !filled) {
-      setBorderAvatar(true);
+  const [modalLocation, setModalLocation] = useState(0);
+  const [logout] = useMutation(LOGOUT);
+  const [open, setOpen] = useState(false);
+  const onClickLogout = async () => {
+    await logout();
+  };
+  const onClickProfile = (event) => {
+    const { clientX } = event;
+    if (filled) {
+      event.preventDefault();
     } else {
-      setBorderAvatar(false);
+      setModalLocation(width - clientX - 40);
+      setOpen(!open);
+      setProfileBorder(!profileborder);
     }
-    return () => {};
-  }, [pathname, filled]);
+  };
+  const onClickHeart = (event) => {
+    const { clientX } = event;
+    setFilled(!filled);
+    setModalLocation(width - clientX - 90);
+  };
+  useEffect(() => {
+    const listener = () => {
+      // Do nothing if clicking ref's element or descendent elements
+      // if (!profileMenu.current || profileMenu.current.contains(event.target)) {
+      // }
+      setOpen(!open);
+      setProfileBorder(!profileborder);
+    };
+    const clickAwayListener = () => {
+      setFilled(false);
+    };
+    const resizeHandler = (event) => {
+      console.log(event);
+      if (width < 1000) {
+        setModalLocation(3);
+      } else {
+        setModalLocation((width - 960) / 2);
+      }
+    };
+    if (profileborder) window.addEventListener("click", listener);
+    if (filled) window.addEventListener("click", clickAwayListener);
+    window.addEventListener("resize", resizeHandler);
+
+    return () => {
+      if (profileborder) window.removeEventListener("click", listener);
+      if (filled) window.removeEventListener("click", clickAwayListener);
+      window.removeEventListener("resize", resizeHandler);
+    };
+  }, [profileborder, open, pathname, data, filled, width]);
   return (
     <>
       {!loading && data && data.me ? (
-        <Nav>
-          <Box>
-            <LogoWrapper to="/">
-              <TextLogo src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/1200px-Instagram_logo.svg.png" />
-            </LogoWrapper>
+        <>
+          <Nav>
+            <Box>
+              <LogoWrapper to="/">
+                <TextLogo src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/1200px-Instagram_logo.svg.png" />
+              </LogoWrapper>
 
-            {width < 600 ? null : <SearchBox />}
+              {width < 600 ? null : <SearchBox />}
 
-            <MenuBarWrapper>
-              <MenuBar>
-                <LinkWrapper to="/">
-                  {pathname === "/" && !filled ? (
-                    <HomeIconBlack />
-                  ) : (
-                    <HomeIcon />
-                  )}
-                </LinkWrapper>
-                <LinkWrapper to="/direct/inbox">
-                  {pathname.startsWith("/direct/") && !filled ? (
-                    <PaperPlaneIconBlack />
-                  ) : (
-                    <PaperPlaneIconWhite />
-                  )}
-                </LinkWrapper>
-                <LinkWrapper to="/explore/">
-                  {pathname === "/explore/" && !filled ? (
-                    <CompassIconBlack />
-                  ) : (
-                    <CompassIcon />
-                  )}
-                </LinkWrapper>
-                <HeartButton
-                  onClick={() => {
-                    setFilled(!filled);
-                  }}
-                >
-                  {filled ? (
-                    <FilledHeartIcon color={"black"} />
-                  ) : (
-                    <EmptyHeartIcon />
-                  )}
-                </HeartButton>
+              <MenuBarWrapper>
+                <MenuBar>
+                  <LinkWrapper to="/">
+                    {pathname === "/" && !filled && !open ? (
+                      <HomeIconBlack />
+                    ) : (
+                      <HomeIcon />
+                    )}
+                  </LinkWrapper>
+                  <LinkWrapper to="/direct/inbox">
+                    {pathname.startsWith("/direct/") && !filled && !open ? (
+                      <PaperPlaneIconBlack />
+                    ) : (
+                      <PaperPlaneIconWhite />
+                    )}
+                  </LinkWrapper>
+                  <LinkWrapper to="/explore/">
+                    {pathname === "/explore/" && !filled && !open ? (
+                      <CompassIconBlack />
+                    ) : (
+                      <CompassIcon />
+                    )}
+                  </LinkWrapper>
+                  <HeartButton onClick={onClickHeart}>
+                    {filled ? (
+                      <FilledHeartIcon color={"black"} />
+                    ) : (
+                      <EmptyHeartIcon />
+                    )}
+                  </HeartButton>
 
-                <LinkWrapper
-                  to={`/${data.me.username}`}
-                  onClick={(e) => {
-                    if (filled) {
-                      e.preventDefault();
-                      setBorderAvatar(false);
-                    } else {
-                      setBorderAvatar(true);
+                  <AvatarButton
+                    borderAvatar={
+                      pathname.startsWith(`/${data.me.username}`) ||
+                      profileborder
                     }
-                  }}
-                  borderAvatar={borderAvatar}
-                >
-                  <Avatar src={data.me.avatar} />
+                    onClick={onClickProfile}
+                  >
+                    <Avatar src={data.me.avatar} />
+                  </AvatarButton>
+                </MenuBar>
+              </MenuBarWrapper>
+            </Box>
+            <MenuWrapper
+              showing={open}
+              xLocation={modalLocation}
+              width={230}
+              height={194}
+            >
+              <Menu>
+                <LinkWrapper to={`/${data.me.username}`}>
+                  <MenuItem>profile</MenuItem>
                 </LinkWrapper>
-              </MenuBar>
-            </MenuBarWrapper>
-          </Box>
-        </Nav>
+                <LinkWrapper to={`/${data.me.username}/saved`}>
+                  <MenuItem>saved</MenuItem>
+                </LinkWrapper>
+
+                <MenuItem>settings</MenuItem>
+                <MenuItem>change account</MenuItem>
+                <MenuItem onClick={onClickLogout}>log out</MenuItem>
+              </Menu>
+            </MenuWrapper>
+            <MenuWrapper
+              showing={filled}
+              xLocation={modalLocation}
+              width={530}
+              height={330}
+            ></MenuWrapper>
+          </Nav>
+        </>
       ) : (
         <></>
       )}

@@ -1,11 +1,12 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useLazyQuery, useQuery } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import styled from "styled-components";
 import Avatar from "../Components/Avatar";
+import Button from "../Components/Button";
 import Footer from "../Components/Footer";
 import Loader from "../Components/Loader";
-import useMeQuery from "../Hooks/useMeQuery";
+import { ME } from "../Components/SharedQueries";
 import ProfilePosts from "./ProfilePosts";
 
 const PROFILE = gql`
@@ -14,9 +15,16 @@ const PROFILE = gql`
       id
       username
       avatar
+      fullname
+      bio
       posts {
         id
       }
+      isSelf
+      numberOfFollowers
+      numberOfFollowings
+      numberOfPosts
+      amIFollowing
     }
   }
 `;
@@ -90,17 +98,52 @@ const ProfileLink = styled(Link)`
       : null;
   }}
 `;
+const InfoWrapper = styled.section`
+  padding: 8px 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+`;
+const Username = styled.h2`
+  font-size: 30px;
+`;
+const Numbers = styled.ul`
+  margin-top: 20px;
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+`;
+const NumberText = styled.li`
+  font-size: 16px;
+  strong {
+    font-weight: 600;
+  }
+  &:not(:last-child) {
+    margin-right: 30px;
+  }
+`;
+const OtherInfo = styled.div`
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+`;
+const Name = styled.h1`
+  font-weight: 600;
+  font-size: 18px;
+`;
+const Bio = styled.span`
+  margin-top: 5px;
+`;
 function Profile() {
   const { username } = useParams();
-  const { data: meData } = useMeQuery();
   const { pathname } = useLocation();
   const { data, loading } = useQuery(PROFILE, { variables: { username } });
   const [limit, setLimit] = useState(21);
-  const { data: postData, loading: postLoading, fetchMore } = useQuery(POSTS, {
+  const { data: postData, loading: postLoading } = useQuery(POSTS, {
     variables: { username, limit, offset: 0 },
+    fetchPolicy: "no-cache",
   });
   const [location, setLocation] = useState(`home`);
-  const [hasMore, setHasMore] = useState(true);
   useEffect(() => {
     switch (pathname) {
       case `/${username}/tagged`:
@@ -116,97 +159,109 @@ function Profile() {
         setLocation("home");
         break;
     }
-    return () => {};
-  });
-  return loading ||
-    !data ||
-    !data.seeProfile ||
-    postLoading ||
-    !postData ||
-    !postData.getProfilePost ? (
-    <Loader />
-  ) : (
-    <>
-      <Wrapper>
-        {
-          <>
-            <UserInfo>
-              <AvatarWrapper>
-                <Avatar src={data.seeProfile.avatar} size={150} />
-              </AvatarWrapper>
-              {data.seeProfile.username}
-              {data.seeProfile.fullname}
-              {data.seeProfile.bio}
-            </UserInfo>
-            <Nav>
-              <ProfileLink
-                to={`/${data.seeProfile.username}`}
-                onClick={() => setLocation(`home`)}
-                selected={location === "home"}
-              >
-                게시물
-              </ProfileLink>
-              <ProfileLink
-                to={`/${data.seeProfile.username}/channel`}
-                onClick={() => setLocation(`channel`)}
-                selected={location === "channel"}
-              >
-                IGTV
-              </ProfileLink>
-              {meData.me.username === username && (
-                <ProfileLink
-                  to={`/${data.seeProfile.username}/saved`}
-                  onClick={() => setLocation(`saved`)}
-                  selected={location === "saved"}
-                >
-                  Saved
-                </ProfileLink>
-              )}
-              <ProfileLink
-                to={`/${data.seeProfile.username}/tagged`}
-                onClick={() => setLocation(`tagged`)}
-                selected={location === "tagged"}
-              >
-                Tagged
-              </ProfileLink>
-            </Nav>
 
-            <Posts>
-              <PostWrapper
-              // onLoad={() => {
-              //   const currentLength = postData.getProfilePost.length;
-              //   fetchMore({
-              //     variables: {
-              //       offset: currentLength,
-              //       limit: 3,
-              //     },
-              //   }).then(({ data }) => {
-              //     // Update variables.limit for the original query to include
-              //     // the newly added feed items.
-              //     if (data.getProfilePost.length < limit) {
-              //       setHasMore(false);
-              //     }
-              //     setLimit(currentLength + postData.getProfilePost.length);
-              //     console.log(postData.getProfilePost);
-              //   });
-              // }}
-              >
-                {location === "home" &&
-                  postData.getProfilePost.map((post, index) => {
-                    return <ProfilePosts postId={post.id} key={index} />;
-                  })}
-                {location === "channel" && <div>channel</div>}
-                {location === "saved" && <div>saved</div>}
-                {location === "tagged" && <div>tagged</div>}
-              </PostWrapper>
-            </Posts>
-            {/* todo infinite scroll */}
-          </>
-        }
-      </Wrapper>
-      <Footer />
-    </>
-  );
+    return () => {};
+  }, [username, pathname]);
+  if (loading || postLoading || !data || !postData) {
+    return <Loader />;
+  } else {
+    const { seeProfile } = data;
+    const { getProfilePost } = postData;
+    return (
+      <>
+        <Wrapper>
+          {
+            <>
+              <UserInfo>
+                <AvatarWrapper>
+                  <Avatar src={seeProfile.avatar} size={150} />
+                </AvatarWrapper>
+                <InfoWrapper>
+                  <Username>
+                    {seeProfile.username}{" "}
+                    {seeProfile.isSelf ? (
+                      <Button text={"Edit Profile"} />
+                    ) : seeProfile.amIFollowing ? (
+                      <Button text={"unfollow"} />
+                    ) : (
+                      <Button text={"follow"} />
+                    )}
+                  </Username>
+                  <Numbers>
+                    <NumberText>
+                      게시물 <strong>{seeProfile.numberOfPosts}</strong>
+                    </NumberText>
+                    <NumberText>
+                      팔로워 <strong>{seeProfile.numberOfFollowers}</strong>
+                    </NumberText>
+                    <NumberText>
+                      팔로잉 <strong>{seeProfile.numberOfFollowings}</strong>
+                    </NumberText>
+                  </Numbers>
+                  <OtherInfo>
+                    <Name>{seeProfile.fullname}</Name>
+                    <Bio>{seeProfile.bio}</Bio>
+                  </OtherInfo>
+                </InfoWrapper>
+              </UserInfo>
+              <Nav>
+                <ProfileLink
+                  to={`/${seeProfile.username}`}
+                  onClick={() => setLocation(`home`)}
+                  selected={location === "home"}
+                >
+                  게시물
+                </ProfileLink>
+                <ProfileLink
+                  to={`/${seeProfile.username}/channel`}
+                  onClick={() => setLocation(`channel`)}
+                  selected={location === "channel"}
+                >
+                  IGTV
+                </ProfileLink>
+                {seeProfile.isSelf && (
+                  <ProfileLink
+                    to={`/${seeProfile.username}/saved`}
+                    onClick={() => setLocation(`saved`)}
+                    selected={location === "saved"}
+                  >
+                    Saved
+                  </ProfileLink>
+                )}
+                <ProfileLink
+                  to={`/${seeProfile.username}/tagged`}
+                  onClick={() => setLocation(`tagged`)}
+                  selected={location === "tagged"}
+                >
+                  Tagged
+                </ProfileLink>
+              </Nav>
+
+              <Posts>
+                <PostWrapper>
+                  {location === "home" &&
+                    getProfilePost.map((post, index) => {
+                      return (
+                        <Link to={`/p/${post.id}`} key={index}>
+                          <ProfilePosts postId={post.id} key={index} />
+                        </Link>
+                      );
+                    })}
+                  {location === "channel" && <div>channel</div>}
+                  {location === "saved" && seeProfile.isSelf && (
+                    <div>saved</div>
+                  )}
+                  {location === "tagged" && <div>tagged</div>}
+                </PostWrapper>
+              </Posts>
+              {/* todo infinite scroll */}
+            </>
+          }
+        </Wrapper>
+        <Footer />
+      </>
+    );
+  }
 }
 
 export default Profile;
