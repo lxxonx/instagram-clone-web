@@ -1,9 +1,11 @@
-import { useQuery, gql, useMutation } from "@apollo/client";
-import React, { useEffect, useRef, useState } from "react";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
+import useInput from "../Hooks/useInput";
 import useWidth from "../Hooks/useWidth";
 import Avatar from "./Avatar";
+import FeedActions from "./FeedActions";
 import {
   CompassIcon,
   CompassIconBlack,
@@ -21,6 +23,16 @@ const LOGOUT = gql`
     logUserOut @client
   }
 `;
+const SEARCH = gql`
+  query searchUsers($query: String!) {
+    searchUsers(query: $query) {
+      username
+      avatar
+      fullname
+    }
+  }
+`;
+
 const Nav = styled.header`
   background-color: white;
   display: flex;
@@ -64,7 +76,7 @@ const TextLogo = styled.img`
   width: 108px;
 `;
 
-const SearchBox = styled.div`
+const SearchBox = styled.input`
   ${(props) => props.theme.whiteBox}
   background-color: ${(props) => props.theme.bgColor};
   height: 28px;
@@ -72,6 +84,8 @@ const SearchBox = styled.div`
   flex: 0 1 auto;
   margin: auto;
   display: flex;
+  padding: 0 15px;
+  font-size: 12px;
 `;
 
 const MenuBar = styled(Box)`
@@ -193,6 +207,7 @@ const MenuItem = styled.div`
   :hover {
     background-color: ${(props) => props.theme.lightGreyColor};
   }
+  cursor: pointer;
 `;
 function Header() {
   const { data, loading } = useQuery(ME);
@@ -203,6 +218,21 @@ function Header() {
   const [modalLocation, setModalLocation] = useState(0);
   const [logout] = useMutation(LOGOUT);
   const [open, setOpen] = useState(false);
+  const searchInput = useInput("");
+  const { data: searchData, loading: searchLoading } = useQuery(SEARCH, {
+    variables: {
+      query: searchInput.value,
+    },
+    update: ({ data, loading }) => {
+      if (!loading) {
+        console.log(data);
+      }
+    },
+  });
+  const [search, setSearch] = useState(false);
+  console.log("search.value: ", searchInput.value);
+  console.log("searchData: ", searchData);
+
   const onClickLogout = async () => {
     await logout();
   };
@@ -231,9 +261,9 @@ function Header() {
     };
     const clickAwayListener = () => {
       setFilled(false);
+      setSearch(false);
     };
-    const resizeHandler = (event) => {
-      console.log(event);
+    const resizeHandler = () => {
       if (width < 1000) {
         setModalLocation(3);
       } else {
@@ -241,102 +271,130 @@ function Header() {
       }
     };
     if (profileborder) window.addEventListener("click", listener);
-    if (filled) window.addEventListener("click", clickAwayListener);
+    if (filled || search) window.addEventListener("click", clickAwayListener);
     window.addEventListener("resize", resizeHandler);
 
     return () => {
       if (profileborder) window.removeEventListener("click", listener);
-      if (filled) window.removeEventListener("click", clickAwayListener);
+      if (filled || search)
+        window.removeEventListener("click", clickAwayListener);
       window.removeEventListener("resize", resizeHandler);
     };
-  }, [profileborder, open, pathname, data, filled, width]);
-  return (
-    <>
-      {!loading && data && data.me ? (
-        <>
-          <Nav>
-            <Box>
-              <LogoWrapper to="/">
-                <TextLogo src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/1200px-Instagram_logo.svg.png" />
-              </LogoWrapper>
+  }, [profileborder, open, pathname, data, filled, width, search]);
 
-              {width < 600 ? null : <SearchBox />}
+  if (loading || !data) {
+    return <></>;
+  } else {
+    return (
+      <>
+        <Nav>
+          <MenuWrapper
+            showing={search}
+            xLocation={modalLocation}
+            width={530}
+            height={330}
+          >
+            <Menu>
+              {searchData &&
+                !searchLoading &&
+                searchData.searchUsers.map((user) => {
+                  return (
+                    <LinkWrapper to={`/${user.username}`}>
+                      <MenuItem>
+                        <Avatar src={user.avatar} />
+                        {user.username}
+                      </MenuItem>
+                    </LinkWrapper>
+                  );
+                })}
+            </Menu>
+          </MenuWrapper>
+          <Box>
+            <LogoWrapper to="/">
+              <TextLogo src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/1200px-Instagram_logo.svg.png" />
+            </LogoWrapper>
 
-              <MenuBarWrapper>
-                <MenuBar>
-                  <LinkWrapper to="/">
-                    {pathname === "/" && !filled && !open ? (
-                      <HomeIconBlack />
-                    ) : (
-                      <HomeIcon />
-                    )}
-                  </LinkWrapper>
-                  <LinkWrapper to="/direct/inbox">
-                    {pathname.startsWith("/direct/") && !filled && !open ? (
-                      <PaperPlaneIconBlack />
-                    ) : (
-                      <PaperPlaneIconWhite />
-                    )}
-                  </LinkWrapper>
-                  <LinkWrapper to="/explore/">
-                    {pathname === "/explore/" && !filled && !open ? (
-                      <CompassIconBlack />
-                    ) : (
-                      <CompassIcon />
-                    )}
-                  </LinkWrapper>
-                  <HeartButton onClick={onClickHeart}>
-                    {filled ? (
-                      <FilledHeartIcon color={"black"} />
-                    ) : (
-                      <EmptyHeartIcon />
-                    )}
-                  </HeartButton>
+            {width < 600 ? null : (
+              <SearchBox
+                placeholder="search"
+                value={searchInput.value}
+                onChange={(e) => {
+                  e.target.value === "" ? setSearch(false) : setSearch(true);
+                  searchInput.onChange(e);
+                }}
+              ></SearchBox>
+            )}
 
-                  <AvatarButton
-                    borderAvatar={
-                      pathname.startsWith(`/${data.me.username}`) ||
-                      profileborder
-                    }
-                    onClick={onClickProfile}
-                  >
-                    <Avatar src={data.me.avatar} />
-                  </AvatarButton>
-                </MenuBar>
-              </MenuBarWrapper>
-            </Box>
-            <MenuWrapper
-              showing={open}
-              xLocation={modalLocation}
-              width={230}
-              height={194}
-            >
-              <Menu>
-                <LinkWrapper to={`/${data.me.username}`}>
-                  <MenuItem>profile</MenuItem>
+            <MenuBarWrapper>
+              <MenuBar>
+                <LinkWrapper to="/">
+                  {pathname === "/" && !filled && !open ? (
+                    <HomeIconBlack />
+                  ) : (
+                    <HomeIcon />
+                  )}
                 </LinkWrapper>
-                <LinkWrapper to={`/${data.me.username}/saved`}>
-                  <MenuItem>saved</MenuItem>
+                <LinkWrapper to="/direct/inbox">
+                  {pathname.startsWith("/direct/") && !filled && !open ? (
+                    <PaperPlaneIconBlack />
+                  ) : (
+                    <PaperPlaneIconWhite />
+                  )}
                 </LinkWrapper>
+                <LinkWrapper to="/explore/">
+                  {pathname === "/explore/" && !filled && !open ? (
+                    <CompassIconBlack />
+                  ) : (
+                    <CompassIcon />
+                  )}
+                </LinkWrapper>
+                <HeartButton onClick={onClickHeart}>
+                  {filled ? (
+                    <FilledHeartIcon color={"black"} />
+                  ) : (
+                    <EmptyHeartIcon />
+                  )}
+                </HeartButton>
 
+                <AvatarButton
+                  borderAvatar={
+                    pathname.startsWith(`/${data.me.username}`) || profileborder
+                  }
+                  onClick={onClickProfile}
+                >
+                  <Avatar src={data.me.avatar} />
+                </AvatarButton>
+              </MenuBar>
+            </MenuBarWrapper>
+          </Box>
+          <MenuWrapper showing={open} xLocation={modalLocation} width={230}>
+            <Menu>
+              <LinkWrapper to={`/${data.me.username}`}>
+                <MenuItem>profile</MenuItem>
+              </LinkWrapper>
+              <LinkWrapper to={`/${data.me.username}/saved`}>
+                <MenuItem>saved</MenuItem>
+              </LinkWrapper>
+              <LinkWrapper to={`/account/edit`}>
                 <MenuItem>settings</MenuItem>
-                <MenuItem>change account</MenuItem>
-                <MenuItem onClick={onClickLogout}>log out</MenuItem>
-              </Menu>
-            </MenuWrapper>
-            <MenuWrapper
-              showing={filled}
-              xLocation={modalLocation}
-              width={530}
-              height={330}
-            ></MenuWrapper>
-          </Nav>
-        </>
-      ) : (
-        <></>
-      )}
-    </>
-  );
+              </LinkWrapper>
+              <MenuItem onClick={onClickLogout}>log out</MenuItem>
+            </Menu>
+          </MenuWrapper>
+          <MenuWrapper
+            showing={filled}
+            xLocation={modalLocation}
+            width={530}
+            height={330}
+          >
+            <Menu>
+              <FeedActions username={data.me.username}></FeedActions>
+            </Menu>
+          </MenuWrapper>
+        </Nav>
+      </>
+    );
+  }
 }
 
 export default Header;

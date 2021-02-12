@@ -83,10 +83,32 @@ function AuthContainer() {
               if (!createUser.error) {
                 // there is no error
                 // create the user && log the user in
-
+                await login({
+                  variables: {
+                    emailOrUsername: username.value,
+                    password: password.value,
+                  },
+                  update: async (_, { data }) => {
+                    const { login } = data;
+                    if (!login.error) {
+                      // there's no error => log the user in
+                      if (login.token !== "" || login.token !== undefined) {
+                        await logUserIn({
+                          variables: {
+                            token: login.token,
+                          },
+                        });
+                      } else {
+                        throw Error(
+                          "you can't log in. something wrong with the token"
+                        );
+                      }
+                    }
+                  },
+                });
                 toast.success(
                   <div>
-                    Welcome, <strong>{createUser.user.username}</strong>
+                    Welcome, <strong>{login.user.username}</strong>
                   </div>
                 );
               } else {

@@ -16,7 +16,7 @@ export default createGlobalStyle`
         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     }
     a {
-        color:${(props) => props.theme.blueColor};
+        color:${(props) => props.theme.blackColor};
         text-decoration:none;
     }
     input:focus{
@@ -28,4 +28,5 @@ export default createGlobalStyle`
     html{
         overflow-y:scroll;
     }
+
 `;

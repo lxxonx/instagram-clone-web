@@ -26,8 +26,19 @@ export const cache = new InMemoryCache({
         //     return merged;
         //   },
         // },
+        getMoreComments: offsetLimitPagination(),
       },
     },
+    // Post: {
+    //   fields: {
+    //     numberOfLikes: {
+    //       merge(existing, incoming, { mergeObjects }) {
+    //         // Correct, thanks to invoking nested merge functions.
+    //         return mergeObjects(existing, incoming);
+    //       },
+    //     },
+    //   },
+    // },
   },
 });
 

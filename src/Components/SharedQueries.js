@@ -5,6 +5,9 @@ export const ME = gql`
       username
       avatar
       fullname
+      posts {
+        id
+      }
     }
   }
 `;

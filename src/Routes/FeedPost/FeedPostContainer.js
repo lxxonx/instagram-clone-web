@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
-import FeedPostPresenter from "./FeedPostPresenter";
-import PropTypes from "prop-types";
 import { gql, useMutation } from "@apollo/client";
+import PropTypes from "prop-types";
+import React, { useState } from "react";
 import { timeSince } from "../../Components/TimeSince";
-import useWidth from "../../Hooks/useWidth";
 import useInput from "../../Hooks/useInput";
+import useWidth from "../../Hooks/useWidth";
+import FeedPostPresenter from "./FeedPostPresenter";
 
 const LIKE = gql`
   mutation toggleLike($postId: String!) {
@@ -16,11 +16,22 @@ const ADD_COMMENT = gql`
     addComment(postId: $postId, text: $text)
   }
 `;
+const SAVE_POST = gql`
+  mutation savePost($postId: String!) {
+    savePost(postId: $postId)
+  }
+`;
+const MORE_COMMENTS = gql`
+  query getMoreComments($postId: String!, $limit: Int!, $offset: Int!) {
+    getMoreComments(postId: $postId, limit: $limit, offset: $offset)
+  }
+`;
 function FeedPostContainer({
   id,
   photos,
   user,
   isLiked,
+  isSaved,
   comments,
   createdAt,
   numberOfLikes,
@@ -28,17 +39,28 @@ function FeedPostContainer({
 }) {
   const newComment = useInput("");
   const [filled, setFilled] = useState(isLiked);
+  const [saved, setSaved] = useState(isSaved);
   const [likesCount, setLikesCount] = useState(numberOfLikes);
   const width = useWidth();
   const timeAgo = timeSince(new Date(createdAt * 1));
+  const [savePost] = useMutation(SAVE_POST, {
+    variables: { postId: id },
+    update: ({ loading }) => {
+      if (loading) {
+      }
+      setSaved(!saved);
+    },
+  });
   const [toggleLike] = useMutation(LIKE, {
     variables: { postId: id },
-    update: () => {
+    update: ({ loading }) => {
+      if (loading) {
+      }
       filled ? setLikesCount(likesCount - 1) : setLikesCount(likesCount + 1);
       setFilled(!filled);
     },
   });
-  const [addComment, { data, loading }] = useMutation(ADD_COMMENT, {
+  const [addComment] = useMutation(ADD_COMMENT, {
     variables: { text: newComment.value, postId: id },
   });
   const onSubmit = async (e) => {
@@ -55,7 +77,6 @@ function FeedPostContainer({
       await addComment();
     }
   };
-  // const slideRef = useRef(null);
   const TOTAL_SLIDES = photos.length;
   const [currentSlide, setCurrentSlide] = useState(0);
   const nextSlide = () => {
@@ -68,13 +89,6 @@ function FeedPostContainer({
       setCurrentSlide(currentSlide - 1);
     }
   };
-  // useEffect(() => {
-  //   if (slideRef.current) {
-  //     slideRef.current.style.transition = "all 0.5s ease-in-out";
-  //     slideRef.current.style.transform = `translateX(-${currentSlide}00%)`;
-  //   }
-  // }, [currentSlide]);
-
   return (
     <FeedPostPresenter
       width={width}
@@ -82,6 +96,8 @@ function FeedPostContainer({
       photos={photos}
       user={user}
       filled={filled}
+      savePost={savePost}
+      saved={saved}
       comments={comments}
       timeAgo={timeAgo}
       likesCount={likesCount}
@@ -101,6 +117,13 @@ FeedPostContainer.propTypes = {
   id: PropTypes.string.isRequired,
   photos: PropTypes.arrayOf(
     PropTypes.shape({
+      tagged: PropTypes.arrayOf(
+        PropTypes.shape({
+          user: PropTypes.shape({
+            username: PropTypes.string.isRequired,
+          }),
+        })
+      ),
       id: PropTypes.string.isRequired,
       url: PropTypes.string.isRequired,
     })
@@ -111,6 +134,7 @@ FeedPostContainer.propTypes = {
     username: PropTypes.string.isRequired,
   }).isRequired,
   isLiked: PropTypes.bool.isRequired,
+  isSaved: PropTypes.bool.isRequired,
   comments: PropTypes.arrayOf(
     PropTypes.shape({
       createdAt: PropTypes.string.isRequired,

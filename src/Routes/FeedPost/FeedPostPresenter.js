@@ -1,16 +1,16 @@
 import React from "react";
-import { BiDotsHorizontalRounded } from "react-icons/bi";
 import { GoPrimitiveDot } from "react-icons/go";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import {
   EmptyHeartIcon,
   FilledHeartIcon,
-  NoAvatar,
+  FilledSaveLabel,
   PaperPlaneIconWhite,
   SaveLabel,
   TextBalloon,
 } from "../../Components/Icons";
+import PostHeader from "../../Components/Post/PostHeader";
 const Post = styled.article`
   ${(props) => {
     if (props.width < 640) {
@@ -24,59 +24,12 @@ const Post = styled.article`
 `;
   }}
   max-width: ${(props) => props.theme.postMaxWidth};
+
   width: 100%;
   align-items: center;
   vertical-align: center;
 `;
 
-const PostHeader = styled.header`
-  align-items: center;
-  vertical-align: center;
-  height: 60px;
-  display: flex;
-  padding: 16px;
-`;
-const PostMenu = styled.div`
-  margin-right: 0;
-  padding: 8px;
-
-  cursor: pointer;
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`;
-const PostOwner = styled.div`
-  margin-left: 0;
-  display: flex;
-  align-items: center;
-  vertical-align: center;
-  flex: 1 9999 0%;
-`;
-
-const OwnerAva = styled(Link)`
-  height: 42px;
-  width: 42px;
-  display: flex;
-  align-items: center;
-  vertical-align: center;
-  margin-left: 0;
-`;
-const Avatar = styled.img`
-  height: 38px;
-  width: 38px;
-  overflow: hidden;
-  object-fit: cover;
-  border-radius: 30px;
-  margin-left: 0;
-`;
-
-const OwnerName = styled(Link)`
-  color: ${(props) => props.theme.blackColor};
-  padding: 5px;
-  font-size: 15px;
-  font-weight: 900;
-`;
 const IconWrapper = styled.div`
   display: flex;
   padding: 0 8px;
@@ -122,6 +75,7 @@ const PostPhotoWrapper = styled.div`
   position: relative;
   align-items: center;
   vertical-align: center;
+  max-width: ${(props) => props.theme.postMaxWidth};
 `;
 const PostPhoto = styled.img`
   width: 100%;
@@ -129,7 +83,7 @@ const PostPhoto = styled.img`
     return `${parseInt(props.theme.postMaxWidth) * 1.001}px`;
   }};
   min-height: ${(props) => {
-    return `${parseInt(props.theme.postMaxWidth) * 0.998}px`;
+    return `${parseInt(props.theme.postMaxWidth) * 0.999}px`;
   }};
   overflow: hidden;
   flex-direction: row;
@@ -154,6 +108,7 @@ const PhotoListElement = styled.li`
 `;
 const SlideButtonLeft = styled.button`
   background-color: ${(props) => props.theme.darkGreyColor};
+  display: ${(props) => (props.showing ? "block" : "none")};
   color: white;
   font-stretch: ultra-expanded;
   font-weight: 900;
@@ -161,7 +116,7 @@ const SlideButtonLeft = styled.button`
   left: 15px;
   border: 0;
   z-index: 2;
-  opacity: 0.15;
+  opacity: 0.5;
   width: 25px;
   height: 25px;
   border-radius: 50%;
@@ -169,18 +124,19 @@ const SlideButtonLeft = styled.button`
     outline: none;
   }
   :hover {
-    opacity: 0.5;
+    opacity: 1;
   }
 `;
 const SlideButtonRight = styled.button`
   background-color: ${(props) => props.theme.darkGreyColor};
+  display: ${(props) => (props.showing ? "block" : "none")};
   color: white;
   font-weight: 900;
   position: absolute;
   right: 15px;
   border: 0;
   z-index: 2;
-  opacity: 0.2;
+  opacity: 0.5;
   width: 25px;
   height: 25px;
   border-radius: 50%;
@@ -188,7 +144,7 @@ const SlideButtonRight = styled.button`
     outline: none;
   }
   :hover {
-    opacity: 0.5;
+    opacity: 1;
   }
 `;
 const TextWrapper = styled.div`
@@ -276,7 +232,6 @@ const SlideIndex = styled(GoPrimitiveDot)`
 `;
 
 function FeedPostPresenter({
-  id,
   width,
   photos,
   user,
@@ -292,29 +247,23 @@ function FeedPostPresenter({
   nextSlide,
   prevSlide,
   currentSlide,
+  savePost,
+  saved,
 }) {
   return (
     <Post width={width}>
-      <PostHeader>
-        <PostOwner>
-          <OwnerAva to={user.username}>
-            {user.avatar ? (
-              <Avatar src={user.avatar} />
-            ) : (
-              <NoAvatar viewBox="0 -2 16 16" />
-            )}
-          </OwnerAva>
-          <OwnerName to={user.username}>{user.username}</OwnerName>
-        </PostOwner>
-        <PostMenu>
-          <BiDotsHorizontalRounded />
-        </PostMenu>
-      </PostHeader>
-      <PostPhotoWrapper>
+      <PostHeader username={user.username} avatar={user.avatar} />
+      <PostPhotoWrapper onDoubleClick={toggleLike}>
         {photos.length > 1 ? (
           <>
-            <SlideButtonLeft onClick={prevSlide}>{`<`}</SlideButtonLeft>
-            <SlideButtonRight onClick={nextSlide}>{`>`}</SlideButtonRight>
+            <SlideButtonLeft
+              onClick={prevSlide}
+              showing={currentSlide !== 0}
+            >{`<`}</SlideButtonLeft>
+            <SlideButtonRight
+              onClick={nextSlide}
+              showing={currentSlide < photos.length - 1}
+            >{`>`}</SlideButtonRight>
             <PhotoList>
               {photos.map((photo, index) => (
                 <PhotoListElement
@@ -350,7 +299,7 @@ function FeedPostPresenter({
           <PhotoIndex>
             {photos.map((photo, index) => (
               <SlideIndex
-                key={photo.id}
+                key={index}
                 id={photo.id}
                 showing={`${index === currentSlide}`}
               ></SlideIndex>
@@ -358,15 +307,13 @@ function FeedPostPresenter({
           </PhotoIndex>
         ) : null}
         <SaveLableWrapper>
-          <IconButtons>
-            <SaveLabel />
+          <IconButtons onClick={savePost}>
+            {saved ? <FilledSaveLabel /> : <SaveLabel />}
           </IconButtons>
         </SaveLableWrapper>
       </IconWrapper>
       <TextWrapper>
-        {likesCount > 0 ? (
-          <NumberOfLikes>좋아요 {likesCount}개</NumberOfLikes>
-        ) : null}
+        <NumberOfLikes>좋아요 {likesCount}개</NumberOfLikes>
 
         <UserText>
           <Username to={`/${user.username}`}>{user.username}</Username>

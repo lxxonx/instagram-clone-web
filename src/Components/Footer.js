@@ -11,10 +11,20 @@ const FooterTag = styled.footer`
   font-size: 12px;
   margin-bottom: 50px;
 `;
-
+const ListWrapper = styled.div`
+  display: flex;
+  flex-direction: ${(props) => (props.feed ? "column" : "row")};
+  align-items: center;
+`;
 const List = styled.ul`
   display: flex;
   margin-bottom: 10px;
+  ${(props) =>
+    props.feed
+      ? null
+      : `&:not(:last-child) {
+    margin-right: 16px;
+  }`}
 `;
 
 const ListItem = styled.li`
@@ -39,41 +49,45 @@ const Language = styled.select`
   color: ${(props) => props.theme.darkGreyColor};
 `;
 
-const Footer = ({ signUpPage }) => {
+const Footer = ({ signUpPage, feed }) => {
   return (
     <FooterTag>
-      <List>
-        <ListItem>
-          <Link href="#">about</Link>
-        </ListItem>
-        <ListItem>
-          <Link href="#">blog</Link>
-        </ListItem>
-        <ListItem>
-          <Link href="#">jobs</Link>
-        </ListItem>
-        <ListItem>
-          <Link href="#">help</Link>
-        </ListItem>
-        <ListItem>
-          <Link href="#">api</Link>
-        </ListItem>
-        <ListItem>
-          <Link href="#">privacy</Link>
-        </ListItem>
-        <ListItem>
-          <Link href="#">terms</Link>
-        </ListItem>
-        <ListItem>
-          <Link href="#">top accounts</Link>
-        </ListItem>
-        <ListItem>
-          <Link href="#">hashtags</Link>
-        </ListItem>
-        <ListItem>
-          <Link href="#">locations</Link>
-        </ListItem>
-      </List>
+      <ListWrapper feed={feed}>
+        <List feed={feed}>
+          <ListItem>
+            <Link href="#">about</Link>
+          </ListItem>
+          <ListItem>
+            <Link href="#">blog</Link>
+          </ListItem>
+          <ListItem>
+            <Link href="#">jobs</Link>
+          </ListItem>
+          <ListItem>
+            <Link href="#">help</Link>
+          </ListItem>
+          <ListItem>
+            <Link href="#">api</Link>
+          </ListItem>
+          <ListItem>
+            <Link href="#">privacy</Link>
+          </ListItem>
+        </List>
+        <List>
+          <ListItem>
+            <Link href="#">terms</Link>
+          </ListItem>
+          <ListItem>
+            <Link href="#">top accounts</Link>
+          </ListItem>
+          <ListItem>
+            <Link href="#">hashtags</Link>
+          </ListItem>
+          <ListItem>
+            <Link href="#">locations</Link>
+          </ListItem>
+        </List>
+      </ListWrapper>
       {signUpPage ? (
         <List>
           <ListItem>
@@ -108,5 +122,6 @@ const Footer = ({ signUpPage }) => {
 };
 Footer.propTypes = {
   signUpPage: PropTypes.bool,
+  feed: PropTypes.bool,
 };
 export default Footer;

@@ -1,2 +1,2 @@
-import FeedPostContainer from "./FeedPostContainer";
-export default FeedPostContainer;
+import FeedPost from "./FeedPostContainer";
+export default FeedPost;

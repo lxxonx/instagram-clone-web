@@ -1,37 +1,56 @@
-import { gql, useLazyQuery, useQuery } from "@apollo/client";
-import React, { useEffect, useState } from "react";
+import { gql, useMutation, useQuery } from "@apollo/client";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import styled from "styled-components";
 import Avatar from "../Components/Avatar";
-import Button from "../Components/Button";
 import Footer from "../Components/Footer";
 import Loader from "../Components/Loader";
-import { ME } from "../Components/SharedQueries";
 import ProfilePosts from "./ProfilePosts";
 
 const PROFILE = gql`
   query seeProfile($username: String!) {
     seeProfile(username: $username) {
       id
-      username
       avatar
       fullname
       bio
-      posts {
-        id
-      }
       isSelf
       numberOfFollowers
       numberOfFollowings
       numberOfPosts
       amIFollowing
+      saved {
+        post {
+          id
+          photos {
+            url
+          }
+          numberOfLikes
+          numberOfComments
+        }
+      }
     }
+  }
+`;
+const FOLLOW = gql`
+  mutation follow($username: String!) {
+    follow(username: $username)
+  }
+`;
+const UNFOLLOW = gql`
+  mutation unfollow($username: String!) {
+    unfollow(username: $username)
   }
 `;
 const POSTS = gql`
   query getProfilePost($username: String!, $limit: Int!, $offset: Int!) {
     getProfilePost(username: $username, limit: $limit, offset: $offset) {
       id
+      photos {
+        url
+      }
+      numberOfLikes
+      numberOfComments
     }
   }
 `;
@@ -43,13 +62,16 @@ const UserInfo = styled.header`
   background-color: ${(props) => props.theme.bgColor};
   display: flex;
   flex-direction: row;
-  margin-bottom: 50px;
+  margin-bottom: 40px;
+  margin-top: 5px;
 `;
 const AvatarWrapper = styled.div`
   max-width: 293px;
   width: 100%;
   display: flex;
   justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
 `;
 const Posts = styled.article`
   display: flex;
@@ -80,6 +102,7 @@ const Nav = styled.div`
   box-sizing: content-box;
 `;
 const ProfileLink = styled(Link)`
+  text-transform: uppercase;
   box-sizing: border-box;
   height: 100%;
   color: black;
@@ -134,16 +157,88 @@ const Name = styled.h1`
 const Bio = styled.span`
   margin-top: 5px;
 `;
+const FUEButton = styled.button`
+  height: 30px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border: ${(props) => props.theme.boxBorder};
+  border-radius: ${(props) => props.theme.borderRadius};
+  background-color: ${(props) => {
+    if (props.name === "follow") return props.theme.blueColor;
+    else return `white`;
+  }};
+  color: ${(props) => {
+    if (props.name === "follow") return `white`;
+    else return `black`;
+  }};
+  :focus {
+    outline: none;
+  }
+  cursor: pointer;
+`;
+const EditLink = styled(Link)`
+  cursor: pointer;
+`;
+
 function Profile() {
   const { username } = useParams();
   const { pathname } = useLocation();
-  const { data, loading } = useQuery(PROFILE, { variables: { username } });
   const [limit, setLimit] = useState(21);
+  const [location, setLocation] = useState(`home`);
+  const { data, loading } = useQuery(PROFILE, { variables: { username } });
   const { data: postData, loading: postLoading } = useQuery(POSTS, {
     variables: { username, limit, offset: 0 },
     fetchPolicy: "no-cache",
   });
-  const [location, setLocation] = useState(`home`);
+  const [follow] = useMutation(FOLLOW, {
+    variables: { username },
+  });
+  const [unfollow] = useMutation(UNFOLLOW, {
+    variables: { username },
+  });
+  const [amIFollowing, setAmIFollowing] = useState(true);
+  const [followers, setFollowers] = useState(0);
+  const inputFile = useRef(null);
+
+  const changeAvatar = (event) => {
+    const {
+      target: { files },
+    } = event;
+  };
+  const openFile = () => {
+    inputFile.current.click();
+  };
+  const onClick = async (e) => {
+    const {
+      target: { name },
+    } = e;
+    switch (name) {
+      case "follow":
+        await follow({
+          update: ({ loading }) => {
+            if (!loading) {
+              setAmIFollowing(true);
+              setFollowers(followers + 1);
+            }
+          },
+        });
+        break;
+      case "unfollow":
+        await unfollow({
+          update: ({ loading }) => {
+            if (!loading) {
+              setAmIFollowing(false);
+              setFollowers(followers - 1);
+            }
+          },
+        });
+        break;
+
+      default:
+        //edit profile
+        break;
+    }
+  };
   useEffect(() => {
     switch (pathname) {
       case `/${username}/tagged`:
@@ -159,9 +254,12 @@ function Profile() {
         setLocation("home");
         break;
     }
-
+    if (!loading && data) {
+      setAmIFollowing(data.seeProfile.amIFollowing);
+      setFollowers(data.seeProfile.numberOfFollowers);
+    }
     return () => {};
-  }, [username, pathname]);
+  }, [username, pathname, loading, data]);
   if (loading || postLoading || !data || !postData) {
     return <Loader />;
   } else {
@@ -172,19 +270,34 @@ function Profile() {
         <Wrapper>
           {
             <>
+              <input
+                onChange={changeAvatar}
+                type="file"
+                ref={inputFile}
+                style={{ display: "none" }}
+              />
+
               <UserInfo>
-                <AvatarWrapper>
+                <AvatarWrapper onClick={openFile}>
                   <Avatar src={seeProfile.avatar} size={150} />
                 </AvatarWrapper>
                 <InfoWrapper>
                   <Username>
-                    {seeProfile.username}{" "}
+                    {username}{" "}
                     {seeProfile.isSelf ? (
-                      <Button text={"Edit Profile"} />
-                    ) : seeProfile.amIFollowing ? (
-                      <Button text={"unfollow"} />
+                      <EditLink to="/account/edit">
+                        <FUEButton name="edit" onClick={onClick}>
+                          edit profile
+                        </FUEButton>
+                      </EditLink>
+                    ) : amIFollowing ? (
+                      <FUEButton name="unfollow" onClick={onClick}>
+                        unfollow
+                      </FUEButton>
                     ) : (
-                      <Button text={"follow"} />
+                      <FUEButton name="follow" onClick={onClick}>
+                        follow
+                      </FUEButton>
                     )}
                   </Username>
                   <Numbers>
@@ -192,7 +305,7 @@ function Profile() {
                       게시물 <strong>{seeProfile.numberOfPosts}</strong>
                     </NumberText>
                     <NumberText>
-                      팔로워 <strong>{seeProfile.numberOfFollowers}</strong>
+                      팔로워 <strong>{followers}</strong>
                     </NumberText>
                     <NumberText>
                       팔로잉 <strong>{seeProfile.numberOfFollowings}</strong>
@@ -206,14 +319,14 @@ function Profile() {
               </UserInfo>
               <Nav>
                 <ProfileLink
-                  to={`/${seeProfile.username}`}
+                  to={`/${username}`}
                   onClick={() => setLocation(`home`)}
                   selected={location === "home"}
                 >
                   게시물
                 </ProfileLink>
                 <ProfileLink
-                  to={`/${seeProfile.username}/channel`}
+                  to={`/${username}/channel`}
                   onClick={() => setLocation(`channel`)}
                   selected={location === "channel"}
                 >
@@ -221,7 +334,7 @@ function Profile() {
                 </ProfileLink>
                 {seeProfile.isSelf && (
                   <ProfileLink
-                    to={`/${seeProfile.username}/saved`}
+                    to={`/${username}/saved`}
                     onClick={() => setLocation(`saved`)}
                     selected={location === "saved"}
                   >
@@ -229,7 +342,7 @@ function Profile() {
                   </ProfileLink>
                 )}
                 <ProfileLink
-                  to={`/${seeProfile.username}/tagged`}
+                  to={`/${username}/tagged`}
                   onClick={() => setLocation(`tagged`)}
                   selected={location === "tagged"}
                 >
@@ -240,17 +353,39 @@ function Profile() {
               <Posts>
                 <PostWrapper>
                   {location === "home" &&
-                    getProfilePost.map((post, index) => {
-                      return (
-                        <Link to={`/p/${post.id}`} key={index}>
-                          <ProfilePosts postId={post.id} key={index} />
-                        </Link>
-                      );
-                    })}
+                    (getProfilePost.length > 0
+                      ? getProfilePost.map((post, index) => {
+                          return (
+                            <Link to={`/p/${post.id}`} key={index}>
+                              <ProfilePosts
+                                postId={post.id}
+                                key={index}
+                                url={post.photos[0].url}
+                                numberOfLikes={post.numberOfLikes}
+                                numberOfComments={post.numberOfComments}
+                              />
+                            </Link>
+                          );
+                        })
+                      : "you have no post")}
                   {location === "channel" && <div>channel</div>}
-                  {location === "saved" && seeProfile.isSelf && (
-                    <div>saved</div>
-                  )}
+                  {location === "saved" &&
+                    seeProfile.isSelf &&
+                    (seeProfile.saved.length > 0
+                      ? seeProfile.saved.map((saved, index) => {
+                          return (
+                            <Link to={`/p/${saved.post.id}`} key={index}>
+                              <ProfilePosts
+                                postId={saved.post.id}
+                                key={index}
+                                url={saved.post.photos[0].url}
+                                numberOfLikes={saved.post.numberOfLikes}
+                                numberOfComments={saved.post.numberOfComments}
+                              />
+                            </Link>
+                          );
+                        })
+                      : "you have no saved post")}
                   {location === "tagged" && <div>tagged</div>}
                 </PostWrapper>
               </Posts>
