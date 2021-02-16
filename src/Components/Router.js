@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { Redirect, Route, Switch } from "react-router-dom";
-import Post from "../Post";
+import Post from "../Routes/Post";
 import Auth from "../Routes/Auth";
 import Direct from "../Routes/Direct";
 import EditProfile from "../Routes/EditProfile";

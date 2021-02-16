@@ -232,7 +232,9 @@ function Header() {
   const [search, setSearch] = useState(false);
   console.log("search.value: ", searchInput.value);
   console.log("searchData: ", searchData);
-
+  const refreshPage = () => {
+    window.location.reload();
+  };
   const onClickLogout = async () => {
     await logout();
   };
@@ -310,10 +312,15 @@ function Header() {
             </Menu>
           </MenuWrapper>
           <Box>
-            <LogoWrapper to="/">
-              <TextLogo src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/1200px-Instagram_logo.svg.png" />
-            </LogoWrapper>
-
+            {pathname === "/" && !filled && !open ? (
+              <LogoWrapper to="/" onClick={refreshPage}>
+                <TextLogo src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/1200px-Instagram_logo.svg.png" />
+              </LogoWrapper>
+            ) : (
+              <LogoWrapper to="/">
+                <TextLogo src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/1200px-Instagram_logo.svg.png" />
+              </LogoWrapper>
+            )}
             {width < 600 ? null : (
               <SearchBox
                 placeholder="search"
@@ -327,13 +334,15 @@ function Header() {
 
             <MenuBarWrapper>
               <MenuBar>
-                <LinkWrapper to="/">
-                  {pathname === "/" && !filled && !open ? (
+                {pathname === "/" && !filled && !open ? (
+                  <LinkWrapper to="/" onClick={refreshPage}>
                     <HomeIconBlack />
-                  ) : (
+                  </LinkWrapper>
+                ) : (
+                  <LinkWrapper to="/">
                     <HomeIcon />
-                  )}
-                </LinkWrapper>
+                  </LinkWrapper>
+                )}
                 <LinkWrapper to="/direct/inbox">
                   {pathname.startsWith("/direct/") && !filled && !open ? (
                     <PaperPlaneIconBlack />

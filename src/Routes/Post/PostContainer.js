@@ -1,7 +1,7 @@
 import { gql, useQuery } from "@apollo/client";
 import React from "react";
 import { useParams } from "react-router-dom";
-import Loader from "../Components/Loader";
+import Loader from "../../Components/Loader";
 const POST = gql`
   query seePost($postId: String!) {
     seePost(postId: $postId) {
