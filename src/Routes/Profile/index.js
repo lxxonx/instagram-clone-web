@@ -1,10 +1,9 @@
-import { gql, useLazyQuery, useQuery } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useLocation, useParams } from "react-router-dom";
 import Footer from "../../Components/Footer";
 import Loader from "../../Components/Loader";
-import { refreshPage } from "../../Components/Util";
 import Posted from "./Posted";
 import ProfileHeader from "./ProfileHeader";
 import ProfileNav from "./ProfileNav";

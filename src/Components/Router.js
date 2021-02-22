@@ -9,6 +9,7 @@ import Feed from "../Routes/Feed";
 import Profile from "../Routes/Profile";
 import FeedActions from "./FeedActions";
 import Header from "./Header";
+import CreatePost from "../Routes/CreatePost";
 
 const LoggedInRoutes = () => {
   return (
@@ -19,6 +20,7 @@ const LoggedInRoutes = () => {
         <Route path="/t/test" component={FeedActions} />
         <Route path="/explore" component={Explore} />
         <Route path="/direct" component={Direct} />
+        <Route exact path="/p/create" component={CreatePost} />
         <Route path="/p/:postId/" component={Post} />
         <Route path="/account" component={EditProfile} />
         <Route path="/:username" component={Profile} />

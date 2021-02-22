@@ -11,6 +11,7 @@ const GET_POST = gql`
         avatar
         amIFollowing
         username
+        isSelf
       }
       isLiked
       isSaved

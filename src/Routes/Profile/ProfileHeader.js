@@ -195,7 +195,16 @@ function ProfileHeader({
 
         <InfoWrapper>
           <Username>
-            {username} {!isSelf && <FUEButton>message</FUEButton>}
+            {username}{" "}
+            {!isSelf ? (
+              <Link>
+                <FUEButton>message</FUEButton>
+              </Link>
+            ) : (
+              <Link to="/p/create">
+                <FUEButton>create post</FUEButton>
+              </Link>
+            )}
             {isSelf ? (
               <EditLink to="/account/edit">
                 <FUEButton name="edit" onClick={onClick}>

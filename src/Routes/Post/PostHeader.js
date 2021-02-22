@@ -57,7 +57,7 @@ const Avatar = styled.img`
 const OwnerName = styled(Link)`
   ${(props) => props.theme.usernameText};
 `;
-function PostHeader({ username, avatar, amIFollowing }) {
+function PostHeader({ username, avatar, amIFollowing, isSelf }) {
   if (amIFollowing === undefined) {
     return (
       <FeedHeader>
@@ -80,7 +80,7 @@ function PostHeader({ username, avatar, amIFollowing }) {
             <Avatar src={avatar === "" ? "/Images/avatar.jpg" : avatar} />
           </OwnerAvatar>
           <OwnerName to={`/${username}`}>{username}</OwnerName>
-          <div>{amIFollowing ? "following" : "follow"}</div>
+          {isSelf ? null : <div>{amIFollowing ? "following" : "follow"}</div>}
         </Owner>
         <PostMenu>
           <BiDotsHorizontalRounded />

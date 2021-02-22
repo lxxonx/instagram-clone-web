@@ -136,6 +136,7 @@ function PostContainer({
             username={user.username}
             avatar={user.avatar}
             amIFollowing={user.amIFollowing}
+            isSelf={user.isSelf}
           />
           <PostIcons
             isLiked={isLiked}
