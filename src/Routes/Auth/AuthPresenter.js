@@ -112,6 +112,7 @@ function AuthPresenter({
   firstname,
   password,
   emailOrPhone,
+  secret,
   onSubmit,
 }) {
   return (
@@ -137,7 +138,7 @@ function AuthPresenter({
               </form>
               <DividerWrapper>
                 <Divider />
-                <DividerText> 또는 </DividerText>
+                <DividerText> or </DividerText>
                 <Divider />
               </DividerWrapper>
               <ForgotPassword>
@@ -199,9 +200,25 @@ function AuthPresenter({
               </ForgotPassword>
             </>
           )}
+          {action === "confirmSecret" && (
+            <>
+              <Help>
+                check your mail box and type the secret here or you can login
+                from you mail box
+              </Help>
+              <form name="confirmSecret" onSubmit={onSubmit}>
+                <Input
+                  placeholder={"Confirm Secret"}
+                  value={secret.value}
+                  onChange={secret.onChange}
+                />
+                <Button text={"Confirm Secret"} />
+              </form>
+            </>
+          )}
         </Form>
         <StateChanger>
-          {action === "logIn" && (
+          {(action === "logIn" || action === "confirmSecret") && (
             <>
               Don't have an account?
               <Link onClick={() => setAction("signUp")}> Sign up</Link>

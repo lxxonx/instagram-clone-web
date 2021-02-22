@@ -44,3 +44,22 @@ export const SIGN_UP = gql`
     }
   }
 `;
+export const FORGOT_PWD = gql`
+  mutation requestSecret($email: String!) {
+    requestSecret(email: $email)
+  }
+`;
+export const CONFIRM_SECRET = gql`
+  mutation confirmSecret($email: String!, $secret: String!) {
+    confirmSecret(email: $email, secret: $secret) {
+      token
+      error {
+        message
+        location
+      }
+      user {
+        username
+      }
+    }
+  }
+`;

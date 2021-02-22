@@ -1,10 +1,10 @@
 import { gql, useMutation } from "@apollo/client";
 import PropTypes from "prop-types";
 import React, { useState } from "react";
-import { timeSince } from "../../Components/TimeSince";
 import useInput from "../../Hooks/useInput";
 import useWidth from "../../Hooks/useWidth";
 import FeedPostPresenter from "./FeedPostPresenter";
+import { timeSince } from "../../Components/Util";
 
 const LIKE = gql`
   mutation toggleLike($postId: String!) {
@@ -36,6 +36,8 @@ function FeedPostContainer({
   createdAt,
   numberOfLikes,
   caption,
+  hasMoreComments,
+  numberOfComments,
 }) {
   const newComment = useInput("");
   const [filled, setFilled] = useState(isLiked);
@@ -109,6 +111,8 @@ function FeedPostContainer({
       nextSlide={nextSlide}
       prevSlide={prevSlide}
       currentSlide={currentSlide}
+      hasMoreComments={hasMoreComments}
+      numberOfComments={numberOfComments}
     />
   );
 }

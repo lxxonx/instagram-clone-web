@@ -19,6 +19,8 @@ const FEED_QUERY = gql`
       createdAt
       location
       isSaved
+      hasMoreComments
+      numberOfComments
       comments {
         text
         user {
@@ -149,6 +151,8 @@ function Feed() {
                       createdAt={post.createdAt}
                       numberOfLikes={parseInt(post.numberOfLikes)}
                       caption={post.caption}
+                      hasMoreComments={post.hasMoreComments}
+                      numberOfComments={post.numberOfComments}
                     />
                   );
                 })

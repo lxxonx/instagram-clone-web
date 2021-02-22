@@ -10,7 +10,7 @@ import {
   SaveLabel,
   TextBalloon,
 } from "../../Components/Icons";
-import PostHeader from "../../Components/Post/PostHeader";
+import PostHeader from "../Post/PostHeader";
 const Post = styled.article`
   ${(props) => {
     if (props.width < 640) {
@@ -232,6 +232,7 @@ const SlideIndex = styled(GoPrimitiveDot)`
 `;
 
 function FeedPostPresenter({
+  id,
   width,
   photos,
   user,
@@ -249,6 +250,8 @@ function FeedPostPresenter({
   currentSlide,
   savePost,
   saved,
+  hasMoreComments,
+  numberOfComments,
 }) {
   return (
     <Post width={width}>
@@ -319,7 +322,11 @@ function FeedPostPresenter({
           <Username to={`/${user.username}`}>{user.username}</Username>
           <Text>{caption}</Text>
         </UserText>
-        {/* {fetchmore } */}
+        {hasMoreComments && (
+          <Link to={`/p/${id}`}>
+            <div>see all {numberOfComments} comments</div>
+          </Link>
+        )}
         <CommentsWrapper>
           {comments.map((comment) => {
             return (
