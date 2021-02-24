@@ -18,7 +18,6 @@ const Header = styled.header`
   display: flex;
   padding: 16px;
   width: 100%;
-  border-bottom: 1px solid rgba(var(--ce3, 239, 239, 239), 1);
 `;
 const PostMenu = styled.div`
   margin-right: 0;
@@ -53,11 +52,21 @@ const Avatar = styled.img`
   border-radius: 30px;
   margin-left: 0;
 `;
-
+const PostInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
+`;
 const OwnerName = styled(Link)`
   ${(props) => props.theme.usernameText};
+  font-size: 16px;
 `;
-function PostHeader({ username, avatar, amIFollowing, isSelf }) {
+const Location = styled(Link)`
+  color: ${(props) => props.theme.darkGreyColor};
+  font-size: 13px;
+  font-weight: 400;
+`;
+function PostHeader({ username, avatar, amIFollowing, isSelf, location }) {
   if (amIFollowing === undefined) {
     return (
       <FeedHeader>
@@ -79,7 +88,11 @@ function PostHeader({ username, avatar, amIFollowing, isSelf }) {
           <OwnerAvatar to={`/${username}`}>
             <Avatar src={avatar === "" ? "/Images/avatar.jpg" : avatar} />
           </OwnerAvatar>
-          <OwnerName to={`/${username}`}>{username}</OwnerName>
+          <PostInfo>
+            <OwnerName to={`/${username}`}>{username}</OwnerName>
+            <Location>{location}</Location>
+          </PostInfo>
+
           {isSelf ? null : <div>{amIFollowing ? "following" : "follow"}</div>}
         </Owner>
         <PostMenu>

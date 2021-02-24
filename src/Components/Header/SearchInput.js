@@ -22,14 +22,16 @@ const SearchBoxCover = styled.div`
   width: 215px;
   margin: auto;
   flex: 0 1 auto;
-  margin: auto;
   display: flex;
-  flex-direction: row;
+  padding: 0;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: text;
 `;
 const SearchText = styled.div`
+  justify-content: center;
+  text-align: center;
   width: 170px;
   display: ${(props) => {
     return props.showing ? `block` : `none`;
@@ -52,7 +54,18 @@ const CancelSearch = styled.button`
   display: ${(props) => {
     return props.showing ? `flex` : `none`;
   }};
+  align-self: flex-end;
+  transform: translate(-50%);
+  border: 0;
+  border-radius: 50%;
+  background-color: ${(props) => props.theme.darkGreyColor};
+  color: white;
+  font-weight: 700;
   z-index: 3;
+  cursor: pointer;
+  :focus {
+    outline: none;
+  }
 `;
 function SearchInput() {
   const searchInput = useInput("");
@@ -74,7 +87,7 @@ function SearchInput() {
     searchInput.onChange(e);
   };
   useEffect(() => {
-    const handleClickAway = (e) => {
+    const handleSearch = (e) => {
       if (!searchInputRef.current.contains(e.target)) {
         setSearch(false);
         setSearchMenu(false);
@@ -83,10 +96,13 @@ function SearchInput() {
     const hadleLoad = () => {
       searchInput.setValue("");
     };
-    if (search) window.addEventListener("click", handleClickAway);
+    if (search) {
+      window.addEventListener("click", handleSearch);
+      searchInputRef.current.focus();
+    }
     if (searchInput.value) window.addEventListener("popstate", hadleLoad);
     return () => {
-      if (search) window.removeEventListener("click", handleClickAway);
+      if (search) window.removeEventListener("click", handleSearch);
       if (searchInput.value) window.removeEventListener("popstate", hadleLoad);
     };
   }, [search, searchInput]);
@@ -113,6 +129,7 @@ function SearchInput() {
         showing={search}
         onClick={() => {
           setSearch(false);
+          searchInput.setValue("");
         }}
       >
         x

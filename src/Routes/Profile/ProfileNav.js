@@ -20,16 +20,6 @@ const ProfileLink = styled(Link)`
       ? `border-top: 1px solid black; font-weight: 600;`
       : null;
   }}
-  ::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: black transparent transparent transparent;
-  }
 `;
 const Nav = styled.div`
   border-top: ${(props) => props.theme.boxBorder};

@@ -20,8 +20,8 @@ import {
 import { ME } from "../SharedQueries";
 import { refreshPage } from "../Util";
 import AvatarMenu from "./AvatarMenu";
+import NotificationMenu from "./NotificationMenu";
 import SearchInput from "./SearchInput";
-import SearchMenu from "./SearchMenu";
 import { Menu } from "./Styles";
 
 const Nav = styled.header`
@@ -110,10 +110,9 @@ const LinkWrapper = styled(Link)`
 `;
 const AvatarButton = styled.button`
   border: 1px solid white;
-  ${(props) => (props.borderAvatar ? `border: 1px solid black;` : null)};
   display: flex;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   justify-content: center;
   align-items: center;
   border-radius: 50%;
@@ -122,6 +121,7 @@ const AvatarButton = styled.button`
     outline: none;
   }
   padding: 0;
+  ${(props) => (props.borderAvatar ? `border: 1px solid black;` : null)};
 `;
 const HeartButton = styled.button`
   display: flex;
@@ -142,36 +142,6 @@ const HeartButton = styled.button`
   }
 `;
 
-const MenuWrapper = styled.div`
-  position: absolute;
-  top: 150%;
-  left: 35%;
-  z-index: 3;
-  width: 230px;
-  height: ${(props) => props.height}px;
-  border-radius: 6px;
-  box-shadow: 0 0 5px 1px rgba(var(--jb7, 0, 0, 0), 0.0975);
-  transition: opacity 75ms linear, transform 38ms ease-out,
-    -webkit-transform 38ms ease-out;
-  transform-origin: top center;
-  overflow-x: auto;
-  overflow-y: hidden;
-`;
-
-const MenuItem = styled.div`
-  text-transform: capitalize;
-  width: 100%;
-  height: 37px;
-  justify-content: flex-start;
-  align-items: center;
-  display: flex;
-  padding: 8px 16px;
-  font-size: 16px;
-  :hover {
-    background-color: ${(props) => props.theme.lightGreyColor};
-  }
-  cursor: pointer;
-`;
 function Header() {
   const { data, loading } = useQuery(ME);
   const { pathname } = useLocation();
@@ -261,7 +231,9 @@ function Header() {
                     <EmptyHeartIcon />
                   )}
                   <Menu showing={filled} ref={menuRef}>
-                    <FeedActions username={data.me.username}></FeedActions>
+                    <NotificationMenu
+                      username={data.me.username}
+                    ></NotificationMenu>
                   </Menu>
                 </HeartButton>
 

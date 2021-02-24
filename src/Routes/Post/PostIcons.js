@@ -1,3 +1,4 @@
+import { useMutation } from "@apollo/client";
 import React, { useState } from "react";
 import { GoPrimitiveDot } from "react-icons/go";
 import { useParams } from "react-router-dom";
@@ -10,12 +11,16 @@ import {
   SaveLabel,
   TextBalloon,
 } from "../../Components/Icons";
+import { SAVE_POST } from "../../Components/SharedQueries";
 
 const IconWrapper = styled.section`
   display: flex;
   padding: 0 8px;
-  margin-top: 4px;
+  padding-top: 4px;
   flex-direction: row;
+  order: ${(props) => props.order};
+  border-top: 1px solid rgba(var(--ce3, 239, 239, 239), 1);
+  width: 100%;
 `;
 
 const IconButtons = styled.button`
@@ -59,26 +64,30 @@ const SlideIndex = styled(GoPrimitiveDot)`
   }};
 `;
 function PostIcons({
-  isLiked,
+  id,
   isSaved,
-  numberOfLikes,
+  liked,
   toggleLike,
   photos,
   currentSlide,
-  savePost,
-  filled,
-  saved,
+  order,
 }) {
   const { postId } = useParams();
+  const [saved, setSaved] = useState(isSaved);
+  const [savePost] = useMutation(SAVE_POST, {
+    variables: { postId: id },
+    update: ({ loading }) => {
+      if (loading) {
+      }
+      setSaved(!saved);
+    },
+  });
+
   return (
-    <IconWrapper>
+    <IconWrapper order={order}>
       <Icons>
         <IconButtons onClick={toggleLike}>
-          {filled ? (
-            <FilledHeartIcon size={24} />
-          ) : (
-            <EmptyHeartIcon size={24} />
-          )}
+          {liked ? <FilledHeartIcon size={24} /> : <EmptyHeartIcon size={24} />}
         </IconButtons>
         <IconButtons>
           <TextBalloon />

@@ -1,10 +1,12 @@
 import { useMutation } from "@apollo/client";
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
-import { ADD_COMMENT, LIKE, SAVE_POST } from "../../Components/SharedQueries";
+import Avatar from "../../Components/Avatar";
+import { ADD_COMMENT, LIKE } from "../../Components/SharedQueries";
 import { timeSince } from "../../Components/Util";
 import useInput from "../../Hooks/useInput";
+import { Divider } from "../../Styles/Divider";
 import PostAddComment from "./PostAddComment";
 import PostHeader from "./PostHeader";
 import PostIcons from "./PostIcons";
@@ -16,23 +18,42 @@ const Wrapper = styled.article`
   display: flex;
   flex-direction: row;
 `;
+const FeedWrapper = styled.article`
+  ${(props) => props.theme.whiteBox};
+  margin-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+`;
 const Photos = styled.div`
-  width: 600px;
-  height: 600px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 614px;
+  max-height: 614px;
 `;
 const Sections = styled.div`
-  width: 335px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  ${(props) => (props.maxWidth ? `max-width: ${props.maxWidth}px;` : null)};
+  max-height: 614px;
 `;
 const CreatedTime = styled.section`
+  display: flex;
   color: ${(props) => props.theme.darkGreyColor};
   font-size: 10px;
-  margin: 0px 16px;
+  padding: 0 16px;
+  margin-top: 5px;
   text-transform: uppercase;
+  a {
+    color: ${(props) => props.theme.darkGreyColor};
+  }
   :hover {
     span {
       visibility: visible;
     }
   }
+  order: ${(props) => props.order};
 `;
 const CreatedDate = styled.span`
   position: absolute;
@@ -46,11 +67,48 @@ const CreatedDate = styled.span`
   z-index: 1;
 `;
 const NumberOfLikes = styled.section`
+  display: flex;
   font-size: 16px;
-  margin-bottom: 10px;
+  padding: 0 16px 5px 16px;
   strong {
     font-weight: 600;
   }
+  order: ${(props) => props.order};
+`;
+const Comments = styled.section`
+  padding: 0 16px;
+  display: flex;
+  order: ${(props) => props.order};
+  height: 100%;
+  overflow-y: scroll;
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  flex-direction: row;
+`;
+const Text = styled.div`
+  line-height: 15px;
+  display: block;
+  position: relative;
+`;
+const Username = styled.span`
+  margin-right: 5px;
+  a {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left: 5px;
+    margin-left: -5px;
+  }
+`;
+const Caption = styled.span`
+  vertical-align: baseline;
+  overflow-wrap: break-word;
+`;
+const Comment = styled.div`
+  display: flex;
+  flex-direction: row;
 `;
 function PostContainer({
   id,
@@ -61,31 +119,25 @@ function PostContainer({
   createdAt,
   numberOfLikes,
   caption,
+  location,
+  comments,
 }) {
   const { postId } = useParams();
   const newComment = useInput("");
   const [likesCount, setLikesCount] = useState(numberOfLikes);
-  const [filled, setFilled] = useState(isLiked);
-  const [saved, setSaved] = useState(isSaved);
+  const [liked, setLiked] = useState(isLiked);
   const timeAgo = timeSince(new Date(createdAt * 1));
   const createdDate = new Date(createdAt * 1).toString();
   // const width = useWidth();
-  console.log(createdDate);
-  const [savePost] = useMutation(SAVE_POST, {
-    variables: { postId: id },
-    update: ({ loading }) => {
-      if (loading) {
-      }
-      setSaved(!saved);
-    },
-  });
+  const captionArr = caption.split(" ", 20).join(" ");
+
   const [toggleLike] = useMutation(LIKE, {
     variables: { postId: id },
     update: ({ loading }) => {
       if (loading) {
       }
-      filled ? setLikesCount(likesCount - 1) : setLikesCount(likesCount + 1);
-      setFilled(!filled);
+      liked ? setLikesCount(likesCount - 1) : setLikesCount(likesCount + 1);
+      setLiked(!liked);
     },
   });
   const [addComment] = useMutation(ADD_COMMENT, {
@@ -102,7 +154,6 @@ function PostContainer({
     if (keyCode === 13) {
       e.preventDefault();
       newComment.setValue("");
-      console.log(keyCode);
       await addComment();
     }
   };
@@ -131,31 +182,49 @@ function PostContainer({
             currentSlide={currentSlide}
           />
         </Photos>
-        <Sections>
+        <Sections maxWidth={335}>
           <PostHeader
             username={user.username}
             avatar={user.avatar}
             amIFollowing={user.amIFollowing}
             isSelf={user.isSelf}
+            location={location}
           />
+          <Divider />
+          <Comments order={2}>
+            <div>
+              <Avatar
+                src={user.avatar === "" ? "/Images/avatar.jpeg" : user.avatar}
+                size={38}
+              />
+            </div>
+            <Text>
+              <Username>
+                <Link>{user.username}</Link>
+              </Username>
+              <Caption>
+                <span>{caption}</span>
+              </Caption>
+            </Text>
+          </Comments>
+
           <PostIcons
-            isLiked={isLiked}
+            order={3}
+            id={id}
             isSaved={isSaved}
-            filled={filled}
-            saved={saved}
-            numberOfLikes={numberOfLikes}
+            liked={liked}
             toggleLike={toggleLike}
             photos={photos}
             currentSlide={currentSlide}
-            savePost={savePost}
           />
-          <NumberOfLikes>
+          <NumberOfLikes order={4}>
             <strong>{likesCount} likes</strong>
           </NumberOfLikes>
-          <CreatedTime>
-            {timeAgo} Ago<CreatedDate>{createdDate}</CreatedDate>
+          <CreatedTime order={5}>
+            {timeAgo} <CreatedDate>{createdDate}</CreatedDate>
           </CreatedTime>
           <PostAddComment
+            order={6}
             handleAddComment={handleAddComment}
             newComment={newComment}
             onKeyDown={onKeyDown}
@@ -164,51 +233,65 @@ function PostContainer({
       </Wrapper>
     );
   } else {
-    return null;
-    // return (
-    //   <Post width={width}>
-    //     <PostHeader username={user.username} avatar={user.avatar} />
+    return (
+      <FeedWrapper>
+        <PostHeader username={user.username} avatar={user.avatar} />
 
-    //     <PostIcons
-    //       order={order}
-    //       isLiked={isLiked}
-    //       isSaved={isSaved}
-    //       numberOfLikes={numberOfLikes}
-    //       toggleLike={toggleLike}
-    //       photos={photos}
-    //       currentSlide={currentSlide}
-    //       savePost={savePost}
-    //     />
-    //     <TextWrapper>
-    //       <NumberOfLikes>좋아요 {likesCount}개</NumberOfLikes>
+        <Photos>
+          <PostPhotos
+            toggleLike={toggleLike}
+            photos={photos}
+            prevSlide={prevSlide}
+            nextSlide={nextSlide}
+            currentSlide={currentSlide}
+          />
+        </Photos>
+        <Sections>
+          <PostIcons
+            order={2}
+            id={id}
+            isSaved={isSaved}
+            liked={liked}
+            toggleLike={toggleLike}
+            photos={photos}
+            currentSlide={currentSlide}
+          />
+          {likesCount > 0 && (
+            <NumberOfLikes order={3}>
+              <strong>{likesCount} likes</strong>
+            </NumberOfLikes>
+          )}
+          {/* {fetchmore } */}
 
-    //       <UserText>
-    //         <Username to={`/${user.username}`}>{user.username}</Username>
-    //         <Text>{caption}</Text>
-    //       </UserText>
-    //       {/* {fetchmore } */}
-    //       <CommentsWrapper>
-    //         <Link to={`/p/${id}`}>get more comments</Link>
-    //         {comments.map((comment) => {
-    //           return (
-    //             <UserText key={comment.id}>
-    //               <Username to={`/${comment.user.username}`}>
-    //                 {comment.user.username}
-    //               </Username>
-    //               <Text>{comment.text}</Text>
-    //             </UserText>
-    //           );
-    //         })}
-    //       </CommentsWrapper>
-    //       <CreatedTime>{timeAgo} Ago</CreatedTime>
-    //     </TextWrapper>
-    //     <PostAddComment
-    //       handleAddComment={handleAddComment}
-    //       onKeyDown={onKeyDown}
-    //       newComment={newComment}
-    //     />
-    //   </Post>
-    // );
+          <CreatedTime order={5}>
+            <Link to={`/p/${id}`}>{timeAgo}</Link>
+          </CreatedTime>
+
+          <PostAddComment
+            handleAddComment={handleAddComment}
+            onKeyDown={onKeyDown}
+            newComment={newComment}
+            order={6}
+          />
+          <Comments order={4}>
+            <Text>
+              <Username>
+                <Link to={`/${user.username}`}>{user.username}</Link>
+              </Username>
+              <Caption>
+                <span>
+                  {caption.length > 200 ? captionArr + " ... " : caption}
+                  {caption.length > 200 && <button> see more</button>}
+                </span>
+              </Caption>
+            </Text>
+            {comments.map((c) => {
+              return null;
+            })}
+          </Comments>
+        </Sections>
+      </FeedWrapper>
+    );
   }
 }
 

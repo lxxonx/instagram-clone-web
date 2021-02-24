@@ -24,9 +24,18 @@ const GET_POST = gql`
           }
         }
       }
+      location
       createdAt
       numberOfLikes
       caption
+      comments {
+        user {
+          avatar
+          username
+        }
+        text
+        createdAt
+      }
     }
   }
 `;
@@ -56,6 +65,8 @@ function Post({ id }) {
         createdAt={post.createdAt}
         numberOfLikes={post.numberOfLikes}
         caption={post.caption}
+        location={post.location}
+        comments={post.comments}
       />
     );
   }

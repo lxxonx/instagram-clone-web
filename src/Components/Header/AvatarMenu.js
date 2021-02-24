@@ -2,6 +2,7 @@ import { gql, useMutation } from "@apollo/client";
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { Divider } from "../../Styles/Divider";
 const LOGOUT = gql`
   mutation logUserOut {
     logUserOut @client
@@ -41,6 +42,7 @@ const MenuItem = styled.div`
   }
   cursor: pointer;
 `;
+
 function AvatarMenu({ username }) {
   const [logout] = useMutation(LOGOUT);
 
@@ -58,6 +60,7 @@ function AvatarMenu({ username }) {
       <Link to={`/account/edit`}>
         <MenuItem>settings</MenuItem>
       </Link>
+      <Divider />
       <MenuItem onClick={onClickLogout}>log out</MenuItem>
     </Menu>
   );

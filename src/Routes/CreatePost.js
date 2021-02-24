@@ -16,7 +16,12 @@ const CREATE_POST = gql`
     }
   }
 `;
-
+const Wrapper = styled.div`
+  ${(props) => props.theme.whiteBox};
+  margin-top: 40px;
+  display: flex;
+  flex-direction: row;
+`;
 const Input = styled.input`
   border: 0;
 `;
@@ -33,6 +38,9 @@ function CreatePost() {
   });
 
   const handleFile = ({ target }) => {
+    const reader = new FileReader();
+    const file = target.files[0];
+    reader.onload = (e) => {};
     setFiles(target.files);
   };
   const onSubmit = async (e) => {
@@ -40,7 +48,7 @@ function CreatePost() {
     console.log(files);
   };
   return (
-    <>
+    <Wrapper>
       <div>create Post</div>
 
       <form onSubmit={onSubmit}>
@@ -57,7 +65,7 @@ function CreatePost() {
           onChange={location.onChange}
         />
       </form>
-    </>
+    </Wrapper>
   );
 }
 

@@ -5,16 +5,13 @@ const Wrapper = styled.section`
   bottom: 0;
   margin-top: 8px;
   border-top: 1px solid rgba(239, 239, 239, 1);
-
+  order: ${(props) => props.order};
   align-items: stretch;
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
   position: relative;
   flex-shrink: 0;
   font-size: 14px;
-  justify-content: center;
-  order: 5;
 `;
 const AddComment = styled.form`
   padding: 0 16px;
@@ -56,9 +53,9 @@ const PostButton = styled.button`
     outline: none;
   }
 `;
-function PostAddComment({ handleAddComment, newComment, onKeyDown }) {
+function PostAddComment({ handleAddComment, newComment, onKeyDown, order }) {
   return (
-    <Wrapper>
+    <Wrapper order={order}>
       <AddComment onSubmit={handleAddComment}>
         <InputComment
           value={newComment.value}

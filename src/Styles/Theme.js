@@ -17,7 +17,7 @@ const Theme = {
              border-radius:${BORDER_RADIUS};
              background-color:white;
             `,
-  usernameText: `padding: 5px;
+  usernameText: `
                 font-size: 15px;
                 font-weight: 900;`,
 };

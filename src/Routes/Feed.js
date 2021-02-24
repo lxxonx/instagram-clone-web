@@ -7,8 +7,8 @@ import Footer from "../Components/Footer";
 import Loader from "../Components/Loader";
 import { ME } from "../Components/SharedQueries";
 import useWidth from "../Hooks/useWidth";
-import FeedPost from "./FeedPost";
 import FeedStory from "./FeedStory";
+import Post from "./Post";
 
 const FEED_QUERY = gql`
   query getFeed($limit: Int!, $offset: Int) {
@@ -117,13 +117,28 @@ const LinkWrapper = styled(Link)`
 `;
 function Feed() {
   const [limit, setLimit] = useState(5);
-  const [hasMore, setHasMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const { loading, data, fetchMore } = useQuery(FEED_QUERY, {
     variables: { limit, offset: 0 },
     fetchPolicy: "no-cache",
   });
   const { data: meData } = useQuery(ME);
   const width = useWidth();
+  // const handleScroll = () => {
+  //   const scrollHeight = document.documentElement.scrollHeight;
+  //   const scrollTop = document.documentElement.scrollTop;
+  //   const clientHeight = document.documentElement.clientHeight;
+  //   if (scrollTop + clientHeight >= scrollHeight && loading === false) {
+  //   }
+  // };
+  // useEffect(() => {
+  //   // scroll event listener 등록
+  //   window.addEventListener("scroll", handleScroll);
+  //   return () => {
+  //     // scroll event listener 해제
+  //     window.removeEventListener("scroll", handleScroll);
+  //   };
+  // });
   if (loading || !data || !meData) {
     return <Loader />;
   } else {
@@ -139,22 +154,7 @@ function Feed() {
             <FeedStory />
             {getFeed.length > 0
               ? getFeed.map((post, index) => {
-                  return (
-                    <FeedPost
-                      key={index}
-                      id={post.id}
-                      photos={post.photos}
-                      user={post.user}
-                      isLiked={post.isLiked}
-                      isSaved={post.isSaved}
-                      comments={post.comments}
-                      createdAt={post.createdAt}
-                      numberOfLikes={parseInt(post.numberOfLikes)}
-                      caption={post.caption}
-                      hasMoreComments={post.hasMoreComments}
-                      numberOfComments={post.numberOfComments}
-                    />
-                  );
+                  return <Post key={index} id={post.id} />;
                 })
               : "There is NO post to show. Let's post something"}
             {hasMore && (

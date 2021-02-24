@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import styled from "styled-components";
 
 const PostPhotoWrapper = styled.div`
@@ -6,20 +6,13 @@ const PostPhotoWrapper = styled.div`
   position: relative;
   align-items: center;
   vertical-align: center;
-  max-width: ${(props) => props.theme.postMaxWidth};
 `;
 const PostPhoto = styled.img`
   width: 100%;
-  max-height: ${(props) => {
-    return `${parseInt(props.theme.postMaxWidth) * 1.001}px`;
-  }};
-  min-height: ${(props) => {
-    return `${parseInt(props.theme.postMaxWidth) * 0.999}px`;
-  }};
+  height: 100%;
   overflow: hidden;
   flex-direction: row;
   object-fit: cover;
-
   box-sizing: border-box;
   display: flex;
 `;
@@ -30,8 +23,8 @@ const PhotoList = styled.ul`
   flex-direction: row;
 `;
 const PhotoListElement = styled.li`
+  height: 100%;
   width: 100%;
-  height: width;
   position: absolute;
   top: 0;
   left: 0;
@@ -86,15 +79,29 @@ function PostPhotos({
   nextSlide,
   currentSlide,
 }) {
+  const slideButtonLeft = useRef();
+  const slideButtonRight = useRef();
+
   return (
-    <PostPhotoWrapper onDoubleClick={toggleLike}>
+    <PostPhotoWrapper
+      onDoubleClick={(e) => {
+        if (
+          !slideButtonLeft.current.contains(e.target) &&
+          !slideButtonRight.current.contains(e.target)
+        ) {
+          toggleLike();
+        }
+      }}
+    >
       {photos.length > 1 ? (
         <>
           <SlideButtonLeft
+            ref={slideButtonLeft}
             onClick={prevSlide}
             showing={currentSlide !== 0}
           >{`<`}</SlideButtonLeft>
           <SlideButtonRight
+            ref={slideButtonRight}
             onClick={nextSlide}
             showing={currentSlide < photos.length - 1}
           >{`>`}</SlideButtonRight>
