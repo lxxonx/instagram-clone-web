@@ -31,7 +31,6 @@ const UserNotFound = styled.div`
   margin-top: 100px;
 `;
 const MenuItem = styled.div`
-  text-transform: capitalize;
   width: 100%;
   height: 60px;
   justify-content: flex-start;
@@ -63,7 +62,6 @@ function SearchMenu({ users }) {
         <UserNotFound>user not found</UserNotFound>
       ) : (
         users.map((u, index) => {
-          console.log(u);
           return (
             <Link to={`/${u.username}`} key={index}>
               <MenuItem>

@@ -1,12 +1,9 @@
-import { gql, useMutation, useQuery } from "@apollo/client";
 import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import useInput from "../../Hooks/useInput";
 import useWidth from "../../Hooks/useWidth";
-import Avatar from "../Avatar";
-import FeedActions from "../FeedActions";
+import { MyAvatar } from "../Avatar";
 import {
   CompassIcon,
   CompassIconBlack,
@@ -17,12 +14,14 @@ import {
   PaperPlaneIconBlack,
   PaperPlaneIconWhite,
 } from "../Icons";
-import { ME } from "../SharedQueries";
 import { refreshPage } from "../Util";
 import AvatarMenu from "./AvatarMenu";
 import NotificationMenu from "./NotificationMenu";
 import SearchInput from "./SearchInput";
 import { Menu } from "./Styles";
+import { myUsernameVar } from "../../Apollo/LocalState";
+import { useQuery } from "@apollo/client";
+import { ME } from "../SharedQueries";
 
 const Nav = styled.header`
   background-color: white;
@@ -142,8 +141,9 @@ const HeartButton = styled.button`
   }
 `;
 
-function Header() {
+function HeaderContainer() {
   const { data, loading } = useQuery(ME);
+
   const { pathname } = useLocation();
   const [filled, setFilled] = useState(false);
   const [profileborder, setProfileBorder] = useState(false);
@@ -170,6 +170,7 @@ function Header() {
     const clickAwayListener = () => {
       setFilled(false);
     };
+    myUsernameVar(data?.me?.username);
 
     if (profileborder) window.addEventListener("click", listener);
     if (filled) window.addEventListener("click", clickAwayListener);
@@ -177,10 +178,11 @@ function Header() {
       if (profileborder) window.removeEventListener("click", listener);
       if (filled) window.removeEventListener("click", clickAwayListener);
     };
-  }, [profileborder, open, data, filled, width]);
+  }, [profileborder, open, filled, width, data]);
   if (loading || !data) {
     return null;
   } else {
+    const { me } = data;
     return (
       <>
         <Helmet>
@@ -231,21 +233,19 @@ function Header() {
                     <EmptyHeartIcon />
                   )}
                   <Menu showing={filled} ref={menuRef}>
-                    <NotificationMenu
-                      username={data.me.username}
-                    ></NotificationMenu>
+                    <NotificationMenu username={me.username}></NotificationMenu>
                   </Menu>
                 </HeartButton>
 
                 <AvatarButton
                   borderAvatar={
-                    pathname.startsWith(`/${data.me.username}`) || profileborder
+                    pathname.startsWith(`/${me.username}`) || profileborder
                   }
                   onClick={onClickProfile}
                 >
-                  <Avatar src={data.me.avatar} />
+                  <MyAvatar />
                   <Menu showing={open} ref={menuRef}>
-                    <AvatarMenu username={data.me.username} />
+                    <AvatarMenu username={me.username} />
                   </Menu>
                 </AvatarButton>
               </MenuBar>
@@ -257,4 +257,4 @@ function Header() {
   }
 }
 
-export default Header;
+export default HeaderContainer;

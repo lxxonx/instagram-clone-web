@@ -154,6 +154,7 @@ function AuthPresenter({
                 placeholder={"Email or Phone Number"}
                 value={emailOrPhone.value}
                 onChange={emailOrPhone.onChange}
+                required={true}
               />
               <Input
                 placeholder={"First name"}
@@ -164,12 +165,14 @@ function AuthPresenter({
                 placeholder={"Username"}
                 value={username.value}
                 onChange={username.onChange}
+                required={true}
               />
               <Input
                 placeholder={"password"}
                 type="password"
                 value={password.value}
                 onChange={password.onChange}
+                required={true}
               />
               <Button text={"Sign up"} />
             </form>

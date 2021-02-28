@@ -11,6 +11,7 @@ import PostAddComment from "./PostAddComment";
 import PostHeader from "./PostHeader";
 import PostIcons from "./PostIcons";
 import PostPhotos from "./PostPhotos";
+import { Helmet } from "react-helmet";
 
 const Wrapper = styled.article`
   ${(props) => props.theme.whiteBox};
@@ -27,6 +28,14 @@ const FeedWrapper = styled.article`
 const Photos = styled.div`
   overflow: hidden;
   width: 100%;
+  height: 100%;
+  max-width: 598px;
+  max-height: 598px;
+`;
+const FeedPhotos = styled.div`
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
   max-width: 614px;
   max-height: 614px;
 `;
@@ -34,9 +43,11 @@ const Sections = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
   ${(props) => (props.maxWidth ? `max-width: ${props.maxWidth}px;` : null)};
-  max-height: 614px;
+  max-height: 598px;
+`;
+const AvatarWrapper = styled.div`
+  margin-right: 14px;
 `;
 const CreatedTime = styled.section`
   display: flex;
@@ -79,21 +90,30 @@ const Comments = styled.section`
   padding: 0 16px;
   display: flex;
   order: ${(props) => props.order};
-  height: 100%;
+  ${(props) => (props.order === 2 ? `padding: 16px;` : null)};
   overflow-y: scroll;
   ::-webkit-scrollbar {
     display: none;
   }
+  flex-direction: column;
+  height: 100%;
+`;
+const Comment = styled.div`
+  display: flex;
   flex-direction: row;
+  vertical-align: center;
+  padding-bottom: 16px;
 `;
 const Text = styled.div`
-  line-height: 15px;
+  padding: 0;
+  line-height: 1.3em;
   display: block;
   position: relative;
 `;
 const Username = styled.span`
-  margin-right: 5px;
+  margin-right: 6px;
   a {
+    font-size: 15px;
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -102,14 +122,20 @@ const Username = styled.span`
     margin-left: -5px;
   }
 `;
+const TextCreated = styled.div`
+  color: ${(props) => props.theme.darkGreyColor};
+  font-size: 10px;
+  margin-top: 5px;
+  text-transform: uppercase;
+`;
 const Caption = styled.span`
   vertical-align: baseline;
   overflow-wrap: break-word;
+  span {
+    white-space: pre-wrap;
+  }
 `;
-const Comment = styled.div`
-  display: flex;
-  flex-direction: row;
-`;
+
 function PostContainer({
   id,
   user,
@@ -128,8 +154,10 @@ function PostContainer({
   const [liked, setLiked] = useState(isLiked);
   const timeAgo = timeSince(new Date(createdAt * 1));
   const createdDate = new Date(createdAt * 1).toString();
-  // const width = useWidth();
+
   const captionArr = caption.split(" ", 20).join(" ");
+
+  console.log(comments);
 
   const [toggleLike] = useMutation(LIKE, {
     variables: { postId: id },
@@ -173,6 +201,17 @@ function PostContainer({
   if (postId) {
     return (
       <Wrapper>
+        <Helmet>
+          <title>
+            {caption === ""
+              ? `Instagram photo by ${
+                  user.fullname ? user.fullname : `@${user.username}`
+                }`
+              : user.fullname
+              ? `${user.fullname} on Instagram: ${caption}`
+              : `@${user.username}`}
+          </title>
+        </Helmet>
         <Photos>
           <PostPhotos
             toggleLike={toggleLike}
@@ -192,20 +231,44 @@ function PostContainer({
           />
           <Divider />
           <Comments order={2}>
-            <div>
-              <Avatar
-                src={user.avatar === "" ? "/Images/avatar.jpeg" : user.avatar}
-                size={38}
-              />
-            </div>
-            <Text>
-              <Username>
-                <Link>{user.username}</Link>
-              </Username>
-              <Caption>
-                <span>{caption}</span>
-              </Caption>
-            </Text>
+            {caption !== "" && (
+              <Comment>
+                <AvatarWrapper>
+                  <Avatar src={user.avatar} size={38} />
+                </AvatarWrapper>
+                <Text>
+                  <Username>
+                    <Link to={`/${user.username}`}>{user.username}</Link>
+                  </Username>
+                  <Caption>
+                    <span>{caption}</span>
+                  </Caption>
+                </Text>
+                <TextCreated></TextCreated>
+              </Comment>
+            )}
+            {comments.map((comment, index) => {
+              return (
+                <Comment key={index}>
+                  <AvatarWrapper>
+                    <Avatar src={comment.user.avatar} size={38} />
+                  </AvatarWrapper>
+                  <Text>
+                    <Username>
+                      <Link to={`/${comment.user.username}`}>
+                        {comment.user.username}
+                      </Link>
+                    </Username>
+                    <Caption>
+                      <span>{comment.text}</span>
+                    </Caption>
+                    <TextCreated>
+                      {timeSince(new Date(comment.createdAt * 1))}
+                    </TextCreated>
+                  </Text>
+                </Comment>
+              );
+            })}
           </Comments>
 
           <PostIcons
@@ -237,7 +300,7 @@ function PostContainer({
       <FeedWrapper>
         <PostHeader username={user.username} avatar={user.avatar} />
 
-        <Photos>
+        <FeedPhotos>
           <PostPhotos
             toggleLike={toggleLike}
             photos={photos}
@@ -245,7 +308,7 @@ function PostContainer({
             nextSlide={nextSlide}
             currentSlide={currentSlide}
           />
-        </Photos>
+        </FeedPhotos>
         <Sections>
           <PostIcons
             order={2}
@@ -281,7 +344,7 @@ function PostContainer({
               <Caption>
                 <span>
                   {caption.length > 200 ? captionArr + " ... " : caption}
-                  {caption.length > 200 && <button> see more</button>}
+                  {caption.length > 200 && <button>see more</button>}
                 </span>
               </Caption>
             </Text>

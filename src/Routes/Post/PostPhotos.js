@@ -83,16 +83,7 @@ function PostPhotos({
   const slideButtonRight = useRef();
 
   return (
-    <PostPhotoWrapper
-      onDoubleClick={(e) => {
-        if (
-          !slideButtonLeft.current.contains(e.target) &&
-          !slideButtonRight.current.contains(e.target)
-        ) {
-          toggleLike();
-        }
-      }}
-    >
+    <PostPhotoWrapper>
       {photos.length > 1 ? (
         <>
           <SlideButtonLeft
@@ -111,13 +102,36 @@ function PostPhotos({
                 showing={`${index === currentSlide}`}
                 key={photo.id}
               >
-                <PostPhoto src={photo.url} key={photo.id} id={photo.id} />
+                <PostPhoto
+                  onDoubleClick={(e) => {
+                    if (
+                      !slideButtonLeft.current.contains(e.target) &&
+                      !slideButtonRight.current.contains(e.target)
+                    ) {
+                      toggleLike();
+                    }
+                  }}
+                  src={photo.url}
+                  key={photo.id}
+                  id={photo.id}
+                />
               </PhotoListElement>
             ))}
           </PhotoList>
         </>
       ) : (
-        <PostPhoto src={photos[0].url} id={photos[0].id} />
+        <PostPhoto
+          onDoubleClick={(e) => {
+            if (
+              !slideButtonLeft.current.contains(e.target) &&
+              !slideButtonRight.current.contains(e.target)
+            ) {
+              toggleLike();
+            }
+          }}
+          src={photos[0].url}
+          id={photos[0].id}
+        />
       )}
     </PostPhotoWrapper>
   );

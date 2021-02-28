@@ -1,18 +1,14 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useQuery, useReactiveVar } from "@apollo/client";
 import React from "react";
 import { HashRouter as Router } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import styled, { ThemeProvider } from "styled-components";
+import { isLoggedInVar } from "../Apollo/LocalState";
 import GlobalStyles from "../Styles/GlobalStyles";
 import Theme from "../Styles/Theme";
 import AppRouter from "./Router";
 
-const ISLOGGEDIN = gql`
-  {
-    isLoggedIn @client
-  }
-`;
 const Wrapper = styled.div`
   min-height: 100%;
   margin: auto;
@@ -42,9 +38,7 @@ const StyledContainer = styled(ToastContainer).attrs({
   }
 `;
 const App = () => {
-  const {
-    data: { isLoggedIn },
-  } = useQuery(ISLOGGEDIN);
+  const isLoggedIn = useReactiveVar(isLoggedInVar);
   return (
     <ThemeProvider theme={Theme}>
       <GlobalStyles />

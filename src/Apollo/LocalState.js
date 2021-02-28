@@ -1,16 +1,16 @@
 // if you have a lot of UI
 // menu open/close etc...
 
-import { gql, InMemoryCache } from "@apollo/client";
+import { InMemoryCache, makeVar } from "@apollo/client";
 import { offsetLimitPagination } from "@apollo/client/utilities";
 
 export const cache = new InMemoryCache({
   typePolicies: {
     Query: {
       fields: {
-        isLoggedIn() {
-          return localStorage.getItem("token") === null ? false : true;
-        },
+        // isLoggedIn() {
+        //   return localStorage.getItem("token") === null ? false : true;
+        // },
         getFeed: offsetLimitPagination(),
         getProfilePost: offsetLimitPagination(),
         // {
@@ -29,6 +29,7 @@ export const cache = new InMemoryCache({
         getMoreComments: offsetLimitPagination(),
       },
     },
+
     // Post: {
     //   fields: {
     //     numberOfLikes: {
@@ -39,43 +40,51 @@ export const cache = new InMemoryCache({
     //     },
     //   },
     // },
-    User: {},
+    User: {
+      merge: true,
+    },
   },
 });
+export const isLoggedInVar = makeVar(
+  localStorage.getItem("token") === null ? false : true
+);
+export const myUsernameVar = makeVar("");
 
 export const resolvers = {
   Mutation: {
     logUserIn: async (_, { token }, { cache }) => {
       localStorage.setItem("token", token);
-      const query = gql`
-        {
-          isLoggedIn @client
-        }
-      `;
+      // const query = gql`
+      //   {
+      //     isLoggedIn @client
+      //   }
+      // `;
       // console.log("before: ", await cache.readQuery({ query }));
-      cache.writeQuery({
-        query,
-        data: {
-          isLoggedIn: true,
-        },
-      });
+      // cache.writeQuery({
+      //   query,
+      //   data: {
+      //     isLoggedIn: true,
+      //   },
+      // });
       // console.log("after: ", await cache.readQuery({ query }));
+      isLoggedInVar(true);
       window.location.reload("/");
       return null;
     },
     logUserOut: (_, __, { cache }) => {
       localStorage.removeItem("token");
-      cache.writeQuery({
-        query: gql`
-          query isLoggedIn {
-            isLoggedIn
-          }
-        `,
-        data: {
-          isLoggedIn: false,
-        },
-      });
+      // cache.writeQuery({
+      //   query: gql`
+      //     query isLoggedIn {
+      //       isLoggedIn
+      //     }
+      //   `,
+      //   data: {
+      //     isLoggedIn: false,
+      //   },
+      // });
       // redirect/ reopen the window
+      isLoggedInVar(false);
       window.location.reload("/");
       return null;
     },

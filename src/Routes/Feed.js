@@ -2,7 +2,7 @@ import { gql, useQuery } from "@apollo/client";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import Avatar from "../Components/Avatar";
+import Avatar, { MyAvatar } from "../Components/Avatar";
 import Footer from "../Components/Footer";
 import Loader from "../Components/Loader";
 import { ME } from "../Components/SharedQueries";
@@ -184,7 +184,7 @@ function Feed() {
             <Etc width={width}>
               <Me>
                 <LinkWrapper to={`/${me.username}`}>
-                  <Avatar src={me.avatar} size={56} />
+                  <MyAvatar size={56} />
                 </LinkWrapper>
                 <MeInfo>
                   <LinkWrapper to={`/${me.username}`}>

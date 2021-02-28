@@ -24,14 +24,14 @@ function AuthContainer() {
   const [logUserIn] = useMutation(WRITE_TOKEN);
   const [login] = useMutation(LOG_IN, {
     variables: {
-      emailOrUsername: emailOrUsername.value,
+      emailOrUsername: emailOrUsername.value.toLowerCase(),
       password: password.value,
     },
   });
   const [createUser] = useMutation(SIGN_UP, {
     variables: {
-      emailOrPhone: emailOrPhone.value,
-      username: username.value,
+      emailOrPhone: emailOrPhone.value.toLowerCase(),
+      username: username.value.toLowerCase(),
       firstname: firstname.value,
       password: password.value,
     },
@@ -101,29 +101,20 @@ function AuthContainer() {
               if (!createUser.error) {
                 // there is no error
                 // create the user && log the user in
-                await login({
-                  variables: {
-                    emailOrUsername: username.value,
-                    password: password.value,
-                  },
-                  update: async (_, { data }) => {
-                    const { login } = data;
-                    if (!login.error) {
-                      // there's no error => log the user in
-                      if (login.token !== "" || login.token !== undefined) {
-                        await logUserIn({
-                          variables: {
-                            token: login.token,
-                          },
-                        });
-                      } else {
-                        throw Error(
-                          "you can't log in. something wrong with the token"
-                        );
-                      }
-                    }
-                  },
-                });
+
+                // there's no error => log the user in
+                if (createUser.token !== "" || createUser.token !== undefined) {
+                  await logUserIn({
+                    variables: {
+                      token: createUser.token,
+                    },
+                  });
+                } else {
+                  throw Error(
+                    "you can't log in. something wrong with the token"
+                  );
+                }
+
                 toast.success(
                   <div>
                     Welcome, <strong>{login.user.username}</strong>

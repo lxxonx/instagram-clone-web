@@ -90,7 +90,11 @@ function PostHeader({ username, avatar, amIFollowing, isSelf, location }) {
           </OwnerAvatar>
           <PostInfo>
             <OwnerName to={`/${username}`}>{username}</OwnerName>
-            <Location>{location}</Location>
+            {location && (
+              <Location to={`/explore/location/${location}`}>
+                {location}
+              </Location>
+            )}
           </PostInfo>
 
           {isSelf ? null : <div>{amIFollowing ? "following" : "follow"}</div>}

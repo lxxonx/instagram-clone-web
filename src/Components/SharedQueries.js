@@ -3,11 +3,18 @@ export const ME = gql`
   query me {
     me {
       username
-      avatar
       fullname
       posts {
         id
       }
+      avatar
+    }
+  }
+`;
+export const MYAVATAR = gql`
+  query me {
+    me {
+      avatar
     }
   }
 `;

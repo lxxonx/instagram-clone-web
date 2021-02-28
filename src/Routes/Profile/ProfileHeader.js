@@ -1,12 +1,11 @@
 import { gql, useMutation } from "@apollo/client";
 import React, { useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import styled from "styled-components";
-import { PROFILE } from ".";
-import { cache } from "../../Apollo/LocalState";
-import Avatar from "../../Components/Avatar";
-import { ME } from "../../Components/SharedQueries";
-import { refreshPage } from "../../Components/Util";
+import Avatar, { MyAvatar } from "../../Components/Avatar";
+import { MYAVATAR } from "../../Components/SharedQueries";
+
 const UserInfo = styled.header`
   background-color: ${(props) => props.theme.bgColor};
   display: flex;
@@ -112,7 +111,6 @@ function ProfileHeader({
 }) {
   const [amIFollowing, setAmIFollowing] = useState(followTrue);
   const [followers, setFollowers] = useState(numberOfFollowers);
-  const [newAvatar, setNewAvatar] = useState(avatar);
   const [follow] = useMutation(FOLLOW, {
     variables: { username },
   });
@@ -127,8 +125,10 @@ function ProfileHeader({
     if (e.target.files[0]) {
       await avatarMutation({
         variables: { avatar: e.target.files[0] },
-        update: () => {
-          refreshPage();
+        refetchQueries: [{ query: MYAVATAR }],
+        update: ({ loading }) => {
+          if (!loading)
+            toast.success(<div>Profile Photo has changed successfully!</div>);
         },
       });
     }
@@ -175,21 +175,16 @@ function ProfileHeader({
         type="file"
         ref={inputFile}
         style={{ display: "none" }}
+        accept="image/*"
       />
       <UserInfo>
         {isSelf ? (
           <AvatarWrapper onClick={openFile}>
-            <Avatar
-              src={avatar === "" ? "/Images/avatar.jpg" : avatar}
-              size={150}
-            />
+            <MyAvatar size={150} />
           </AvatarWrapper>
         ) : (
           <AvatarWrapper>
-            <Avatar
-              src={avatar === "" ? "/Images/avatar.jpg" : avatar}
-              size={150}
-            />
+            <Avatar src={avatar} size={150} />
           </AvatarWrapper>
         )}
 
@@ -197,6 +192,7 @@ function ProfileHeader({
           <Username>
             {username}{" "}
             {!isSelf ? (
+              //message link create and push
               <Link>
                 <FUEButton>message</FUEButton>
               </Link>

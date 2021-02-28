@@ -12,6 +12,7 @@ const GET_POST = gql`
         amIFollowing
         username
         isSelf
+        fullname
       }
       isLiked
       isSaved
@@ -52,7 +53,8 @@ function Post({ id }) {
     fetchPolicy: "no-cache",
   });
   if (loading || !data) {
-    return <Loader />;
+    if (postId) return <Loader />;
+    else return null;
   } else {
     const { seePost: post } = data;
     return (
