@@ -2,6 +2,7 @@ import { gql, useQuery } from "@apollo/client";
 import React from "react";
 import { useParams } from "react-router-dom";
 import Loader from "../../Components/Loader";
+import { GET_COMMENT } from "../../Components/SharedQueries";
 import PostContainer from "./PostContainer";
 const GET_POST = gql`
   query seePost($postId: String!) {
@@ -29,34 +30,36 @@ const GET_POST = gql`
       createdAt
       numberOfLikes
       caption
-      comments {
-        user {
-          avatar
-          username
-        }
-        text
-        createdAt
-      }
     }
   }
 `;
 function Post({ id }) {
   const { postId } = useParams();
-  let pId;
+  let pId, limit;
   if (postId) {
+    limit = 5;
     pId = postId;
   } else {
+    limit = 2;
     pId = id;
   }
   const { data, loading } = useQuery(GET_POST, {
     variables: { postId: pId },
     fetchPolicy: "no-cache",
   });
-  if (loading || !data) {
+  const {
+    data: comment_data,
+    loading: comment_loading,
+    fetchMore: fetchMoreComments,
+  } = useQuery(GET_COMMENT, {
+    variables: { postId: pId, limit, offset: 0 },
+  });
+  if (loading || comment_loading | !data || !comment_data) {
     if (postId) return <Loader />;
     else return null;
   } else {
     const { seePost: post } = data;
+    const comments = comment_data?.getMoreComments;
     return (
       <PostContainer
         id={post.id}
@@ -68,7 +71,8 @@ function Post({ id }) {
         numberOfLikes={post.numberOfLikes}
         caption={post.caption}
         location={post.location}
-        comments={post.comments}
+        comments={comments}
+        fetchMoreComments={fetchMoreComments}
       />
     );
   }

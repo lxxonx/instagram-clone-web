@@ -10,6 +10,7 @@ import Profile from "../Routes/Profile";
 import FeedActions from "./FeedActions";
 import Header from "./Header";
 import CreatePost from "../Routes/CreatePost";
+import Modal from "./Modal";
 
 const LoggedInRoutes = () => {
   return (
@@ -17,6 +18,7 @@ const LoggedInRoutes = () => {
       <Header />
       <Switch>
         <Route exact path="/" component={Feed} />
+        <Route path="/modal" component={Modal} />
         <Route path="/t/test" component={FeedActions} />
         <Route path="/explore" component={Explore} />
         <Route path="/direct" component={Direct} />
@@ -24,6 +26,7 @@ const LoggedInRoutes = () => {
         <Route path="/p/:postId/" component={Post} />
         <Route path="/account" component={EditProfile} />
         <Route path="/:username" component={Profile} />
+
         <Redirect from="*" to="/" />
       </Switch>
     </>

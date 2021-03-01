@@ -1,18 +1,16 @@
 import { useMutation } from "@apollo/client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Helmet } from "react-helmet";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import Avatar from "../../Components/Avatar";
-import { ADD_COMMENT, LIKE } from "../../Components/SharedQueries";
-import { timeSince } from "../../Components/Util";
-import useInput from "../../Hooks/useInput";
+import { LIKE } from "../../Components/SharedQueries";
+import { full_date, timeSince } from "../../Components/Util";
 import { Divider } from "../../Styles/Divider";
 import PostAddComment from "./PostAddComment";
 import PostHeader from "./PostHeader";
 import PostIcons from "./PostIcons";
 import PostPhotos from "./PostPhotos";
-import { Helmet } from "react-helmet";
-
 const Wrapper = styled.article`
   ${(props) => props.theme.whiteBox};
   margin-top: 40px;
@@ -135,7 +133,10 @@ const Caption = styled.span`
     white-space: pre-wrap;
   }
 `;
-
+const TextWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
 function PostContainer({
   id,
   user,
@@ -147,17 +148,16 @@ function PostContainer({
   caption,
   location,
   comments,
+  fetchMoreComments,
 }) {
   const { postId } = useParams();
-  const newComment = useInput("");
   const [likesCount, setLikesCount] = useState(numberOfLikes);
   const [liked, setLiked] = useState(isLiked);
-  const timeAgo = timeSince(new Date(createdAt * 1));
-  const createdDate = new Date(createdAt * 1).toString();
+  const [limit, setLimit] = useState(5);
 
+  const timeAgo = timeSince(createdAt);
+  const createdDate = full_date(createdAt);
   const captionArr = caption.split(" ", 20).join(" ");
-
-  console.log(comments);
 
   const [toggleLike] = useMutation(LIKE, {
     variables: { postId: id },
@@ -168,23 +168,7 @@ function PostContainer({
       setLiked(!liked);
     },
   });
-  const [addComment] = useMutation(ADD_COMMENT, {
-    variables: { text: newComment.value, postId: id },
-  });
 
-  const handleAddComment = async (e) => {
-    e.preventDefault();
-    newComment.setValue("");
-    await addComment();
-  };
-  const onKeyDown = async (e) => {
-    const { keyCode } = e;
-    if (keyCode === 13) {
-      e.preventDefault();
-      newComment.setValue("");
-      await addComment();
-    }
-  };
   const TOTAL_SLIDES = photos.length;
   const [currentSlide, setCurrentSlide] = useState(0);
   const nextSlide = () => {
@@ -197,7 +181,7 @@ function PostContainer({
       setCurrentSlide(currentSlide - 1);
     }
   };
-
+  useEffect(() => {}, [comments, limit]);
   if (postId) {
     return (
       <Wrapper>
@@ -236,18 +220,35 @@ function PostContainer({
                 <AvatarWrapper>
                   <Avatar src={user.avatar} size={38} />
                 </AvatarWrapper>
-                <Text>
-                  <Username>
-                    <Link to={`/${user.username}`}>{user.username}</Link>
-                  </Username>
-                  <Caption>
-                    <span>{caption}</span>
-                  </Caption>
-                </Text>
-                <TextCreated></TextCreated>
+                <TextWrapper>
+                  <Text>
+                    <Username>
+                      <Link to={`/${user.username}`}>{user.username}</Link>
+                    </Username>
+                    <Caption>
+                      <span>{caption}</span>
+                    </Caption>
+                  </Text>
+                  <TextCreated> {timeAgo}</TextCreated>
+                </TextWrapper>
               </Comment>
             )}
-            {comments.map((comment, index) => {
+            {comments.hasMore ? (
+              <button
+                onClick={() => {
+                  const currentLength = comments.comments.length;
+                  fetchMoreComments({
+                    variables: { postId: id, limit: 5, offset: currentLength },
+                  }).then(({ data }) => {
+                    setLimit(currentLength + data.getMoreComments.length);
+                  });
+                }}
+              >
+                {" "}
+                +{" "}
+              </button>
+            ) : null}
+            {comments.comments.map((comment, index) => {
               return (
                 <Comment key={index}>
                   <AvatarWrapper>
@@ -283,15 +284,8 @@ function PostContainer({
           <NumberOfLikes order={4}>
             <strong>{likesCount} likes</strong>
           </NumberOfLikes>
-          <CreatedTime order={5}>
-            {timeAgo} <CreatedDate>{createdDate}</CreatedDate>
-          </CreatedTime>
-          <PostAddComment
-            order={6}
-            handleAddComment={handleAddComment}
-            newComment={newComment}
-            onKeyDown={onKeyDown}
-          />
+          <CreatedTime order={5}>{createdDate}</CreatedTime>
+          <PostAddComment order={6} id={id} />
         </Sections>
       </Wrapper>
     );
@@ -327,15 +321,10 @@ function PostContainer({
           {/* {fetchmore } */}
 
           <CreatedTime order={5}>
-            <Link to={`/p/${id}`}>{timeAgo}</Link>
+            <Link to={`/p/${id}`}>{timeAgo} ago</Link>
           </CreatedTime>
 
-          <PostAddComment
-            handleAddComment={handleAddComment}
-            onKeyDown={onKeyDown}
-            newComment={newComment}
-            order={6}
-          />
+          <PostAddComment order={6} id={id} />
           <Comments order={4}>
             <Text>
               <Username>
@@ -348,7 +337,7 @@ function PostContainer({
                 </span>
               </Caption>
             </Text>
-            {comments.map((c) => {
+            {comments.comments.map((c) => {
               return null;
             })}
           </Comments>

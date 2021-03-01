@@ -1,9 +1,9 @@
-// if you have a lot of UI
-// menu open/close etc...
-
 import { InMemoryCache, makeVar } from "@apollo/client";
 import { offsetLimitPagination } from "@apollo/client/utilities";
-
+export const isLoggedInVar = makeVar(
+  localStorage.getItem("token") === null ? false : true
+);
+export const myUsernameVar = makeVar("");
 export const cache = new InMemoryCache({
   typePolicies: {
     Query: {
@@ -26,16 +26,46 @@ export const cache = new InMemoryCache({
         //     return merged;
         //   },
         // },
-        getMoreComments: offsetLimitPagination(),
+        getMoreComments: {
+          keyArgs: false,
+          comments: {
+            // The keyArgs list and merge function are the same as above.
+
+            merge(existing, incoming, { args: { offset = 0 } }) {
+              console.log(existing);
+              const merged = existing ? existing.slice(0) : [];
+              for (let i = 0; i < incoming.length; ++i) {
+                merged[offset + i] = incoming[i];
+              }
+              return merged;
+            },
+          },
+        },
+        getMessages: {
+          merge(existing, incoming, { args: { offset = 0 } }) {
+            // Slicing is necessary because the existing data is
+            // immutable, and frozen in development.
+            const merged = existing ? existing.slice(0) : [];
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            return merged;
+          },
+        },
       },
     },
 
     // Post: {
     //   fields: {
-    //     numberOfLikes: {
-    //       merge(existing, incoming, { mergeObjects }) {
-    //         // Correct, thanks to invoking nested merge functions.
-    //         return mergeObjects(existing, incoming);
+    //     comments: {
+    //       keyArgs: [],
+
+    //       merge(existing, incoming, { args: { offset = 0 } }) {
+    //         const merged = existing ? existing.slice(0) : [];
+    //         for (let i = 0; i < incoming.length; ++i) {
+    //           merged[offset + i] = incoming[i];
+    //         }
+    //         return merged;
     //       },
     //     },
     //   },
@@ -45,10 +75,6 @@ export const cache = new InMemoryCache({
     },
   },
 });
-export const isLoggedInVar = makeVar(
-  localStorage.getItem("token") === null ? false : true
-);
-export const myUsernameVar = makeVar("");
 
 export const resolvers = {
   Mutation: {

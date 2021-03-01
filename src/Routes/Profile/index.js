@@ -72,6 +72,7 @@ function Profile() {
           {
             <>
               <ProfileHeader
+                id={seeProfile.id}
                 username={username}
                 avatar={seeProfile.avatar}
                 fullname={seeProfile.fullname}

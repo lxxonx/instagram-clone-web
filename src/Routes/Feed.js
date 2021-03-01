@@ -120,7 +120,7 @@ function Feed() {
   const [hasMore, setHasMore] = useState(true);
   const { loading, data, fetchMore } = useQuery(FEED_QUERY, {
     variables: { limit, offset: 0 },
-    fetchPolicy: "no-cache",
+    fetchPolicy: "cache-and-network",
   });
   const { data: meData } = useQuery(ME);
   const width = useWidth();
@@ -163,16 +163,19 @@ function Feed() {
                   const currentLength = getFeed.length;
                   fetchMore({
                     variables: {
-                      offset: currentLength,
+                      offset: getFeed.length,
                       limit: 5,
                     },
-                  }).then(({ data: { getFeed } }) => {
+                  }).then((fetchMoreResult) => {
                     // Update variables.limit for the original query to include
                     // the newly added feed items.
-                    if (getFeed.length < limit) {
+                    console.log(fetchMoreResult);
+                    if (fetchMoreResult.data.getFeed.length.length < limit) {
                       setHasMore(false);
                     }
-                    setLimit(currentLength + getFeed.length);
+                    setLimit(
+                      currentLength + fetchMoreResult.data.getFeed.length
+                    );
                   });
                 }}
               >

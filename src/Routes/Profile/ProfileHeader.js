@@ -1,10 +1,10 @@
 import { gql, useMutation } from "@apollo/client";
 import React, { useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { toast } from "react-toastify";
 import styled from "styled-components";
 import Avatar, { MyAvatar } from "../../Components/Avatar";
-import { MYAVATAR } from "../../Components/SharedQueries";
+import { CREATE_CHAT, MYAVATAR } from "../../Components/SharedQueries";
 
 const UserInfo = styled.header`
   background-color: ${(props) => props.theme.bgColor};
@@ -99,6 +99,7 @@ const CHANGE_AVATAR = gql`
   }
 `;
 function ProfileHeader({
+  id,
   username,
   isSelf,
   avatar,
@@ -109,6 +110,7 @@ function ProfileHeader({
   bio,
   followTrue,
 }) {
+  const history = useHistory();
   const [amIFollowing, setAmIFollowing] = useState(followTrue);
   const [followers, setFollowers] = useState(numberOfFollowers);
   const [follow] = useMutation(FOLLOW, {
@@ -117,7 +119,7 @@ function ProfileHeader({
   const [unfollow] = useMutation(UNFOLLOW, {
     variables: { username },
   });
-
+  const [createChat] = useMutation(CREATE_CHAT, { variables: { toId: id } });
   const inputFile = useRef(null);
 
   const [avatarMutation] = useMutation(CHANGE_AVATAR);
@@ -133,7 +135,15 @@ function ProfileHeader({
       });
     }
   };
-
+  const handleMessage = async () => {
+    // create chat room and push to the url
+    await createChat({
+      update: (_, { data }) => {
+        const chat = data?.createChat?.id;
+        history.push(`/direct/t/${chat}`);
+      },
+    });
+  };
   const openFile = () => {
     inputFile.current.click();
   };
@@ -193,9 +203,7 @@ function ProfileHeader({
             {username}{" "}
             {!isSelf ? (
               //message link create and push
-              <Link>
-                <FUEButton>message</FUEButton>
-              </Link>
+              <FUEButton onClick={handleMessage}>message</FUEButton>
             ) : (
               <Link to="/p/create">
                 <FUEButton>create post</FUEButton>

@@ -1,5 +1,9 @@
-import React from "react";
+import { useMutation } from "@apollo/client";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import styled from "styled-components";
+import { ADD_COMMENT, GET_COMMENT } from "../../Components/SharedQueries";
+import TextareaAutosize from "react-textarea-autosize";
 
 const Wrapper = styled.section`
   bottom: 0;
@@ -22,7 +26,7 @@ const AddComment = styled.form`
   vertical-align: center;
   align-items: center;
 `;
-const InputComment = styled.textarea`
+const InputComment = styled(TextareaAutosize)`
   width: 100%;
   font-size: 14px;
   height: 20px;
@@ -53,16 +57,47 @@ const PostButton = styled.button`
     outline: none;
   }
 `;
-function PostAddComment({ handleAddComment, newComment, onKeyDown, order }) {
+function PostAddComment({ order, id }) {
+  const { register, watch, handleSubmit, setValue, control } = useForm();
+  const text = watch("text");
+  const [addComment] = useMutation(ADD_COMMENT, {
+    variables: { text, postId: id },
+    refetchQueries: [{ query: GET_COMMENT, variables: { postId: id } }],
+  });
+
+  const handleAddComment = async (e) => {
+    await addComment();
+    setValue("text", "");
+  };
+
+  const onKeyDown = async (e) => {
+    const { keyCode } = e;
+    if (keyCode === 13 && !e.shiftKey) {
+      e.preventDefault();
+      await addComment();
+      setValue("text", "");
+    }
+  };
+  useEffect(() => {
+    if (watch("text").includes("@")) {
+      console.log("@");
+    }
+  }, [watch()]);
   return (
     <Wrapper order={order}>
-      <AddComment onSubmit={handleAddComment}>
+      <AddComment onSubmit={handleSubmit(handleAddComment)}>
         <InputComment
-          value={newComment.value}
-          onChange={newComment.onChange}
+          ref={register}
+          name="text"
+          maxRows={3}
           onKeyDown={onKeyDown}
         />
-        <PostButton text={"post"} isEmpty={newComment.value === ""}>
+        <PostButton
+          ref={register}
+          name="button"
+          text={"post"}
+          isEmpty={text === "" || text === undefined}
+        >
           post
         </PostButton>
       </AddComment>
