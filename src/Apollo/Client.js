@@ -1,4 +1,3 @@
-// import ApolloClient from "apollo-boost";
 import { ApolloClient } from "@apollo/client";
 import { resolvers, cache } from "./LocalState";
 import { split } from "@apollo/client";
@@ -6,12 +5,12 @@ import { getMainDefinition } from "@apollo/client/utilities";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { setContext } from "@apollo/client/link/context";
 import { createUploadLink } from "apollo-upload-client";
-const httpLink = createUploadLink({
-  uri: "http://localhost:4000/graphql",
-});
 
+const httpLink = createUploadLink({
+  uri: process.env.REACT_APP_API_URL,
+});
 const wsLink = new WebSocketLink({
-  uri: `ws://localhost:4000/subscriptions`,
+  uri: process.env.REACT_APP_WS_URL,
   options: {
     reconnect: true,
   },
