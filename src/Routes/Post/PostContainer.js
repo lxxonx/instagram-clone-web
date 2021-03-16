@@ -102,6 +102,10 @@ const Comment = styled.div`
   vertical-align: center;
   padding-bottom: 16px;
 `;
+const CommentsText = styled.div`
+  display: flex;
+  flex-direction: column-reverse;
+`;
 const Text = styled.div`
   padding: 0;
   line-height: 1.3em;
@@ -212,6 +216,7 @@ function PostContainer({
             amIFollowing={user.amIFollowing}
             isSelf={user.isSelf}
             location={location}
+            id={id}
           />
           <Divider />
           <Comments order={2}>
@@ -238,9 +243,9 @@ function PostContainer({
                 onClick={() => {
                   const currentLength = comments.comments.length;
                   fetchMoreComments({
-                    variables: { postId: id, limit: 5, offset: currentLength },
-                  }).then(({ data }) => {
-                    setLimit(currentLength + data.getMoreComments.length);
+                    variables: {
+                      cursor: comments?.cursor,
+                    },
                   });
                 }}
               >
@@ -248,28 +253,30 @@ function PostContainer({
                 +{" "}
               </button>
             ) : null}
-            {comments.comments.map((comment, index) => {
-              return (
-                <Comment key={index}>
-                  <AvatarWrapper>
-                    <Avatar src={comment.user.avatar} size={38} />
-                  </AvatarWrapper>
-                  <Text>
-                    <Username>
-                      <Link to={`/${comment.user.username}`}>
-                        {comment.user.username}
-                      </Link>
-                    </Username>
-                    <Caption>
-                      <span>{comment.text}</span>
-                    </Caption>
-                    <TextCreated>
-                      {timeSince(new Date(comment.createdAt * 1))}
-                    </TextCreated>
-                  </Text>
-                </Comment>
-              );
-            })}
+            <CommentsText>
+              {comments.comments.map((comment, index) => {
+                return (
+                  <Comment key={index}>
+                    <AvatarWrapper>
+                      <Avatar src={comment.user.avatar} size={38} />
+                    </AvatarWrapper>
+                    <Text>
+                      <Username>
+                        <Link to={`/${comment.user.username}`}>
+                          {comment.user.username}
+                        </Link>
+                      </Username>
+                      <Caption>
+                        <span>{comment.text}</span>
+                      </Caption>
+                      <TextCreated>
+                        {timeSince(new Date(comment.createdAt * 1))}
+                      </TextCreated>
+                    </Text>
+                  </Comment>
+                );
+              })}
+            </CommentsText>
           </Comments>
 
           <PostIcons
@@ -292,7 +299,7 @@ function PostContainer({
   } else {
     return (
       <FeedWrapper>
-        <PostHeader username={user.username} avatar={user.avatar} />
+        <PostHeader username={user.username} avatar={user.avatar} id={id} />
 
         <FeedPhotos>
           <PostPhotos
@@ -337,9 +344,11 @@ function PostContainer({
                 </span>
               </Caption>
             </Text>
-            {comments.comments.map((c) => {
-              return null;
-            })}
+            {
+              // comments.comments.map((c) => {
+              //   return null;
+              // })
+            }
           </Comments>
         </Sections>
       </FeedWrapper>

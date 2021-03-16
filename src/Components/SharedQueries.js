@@ -29,8 +29,8 @@ export const ADD_COMMENT = gql`
   }
 `;
 export const GET_COMMENT = gql`
-  query getMoreComments($postId: String!, $limit: Int, $offset: Int) {
-    getMoreComments(postId: $postId, limit: $limit, offset: $offset) {
+  query getMoreComments($postId: String!, $limit: Int, $cursor: String) {
+    getMoreComments(postId: $postId, limit: $limit, cursor: $cursor) {
       comments {
         text
         createdAt
@@ -40,6 +40,7 @@ export const GET_COMMENT = gql`
         }
       }
       hasMore
+      cursor
     }
   }
 `;

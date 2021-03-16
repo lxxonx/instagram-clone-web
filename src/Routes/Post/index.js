@@ -52,7 +52,7 @@ function Post({ id }) {
     loading: comment_loading,
     fetchMore: fetchMoreComments,
   } = useQuery(GET_COMMENT, {
-    variables: { postId: pId, limit, offset: 0 },
+    variables: { postId: pId, limit },
   });
   if (loading || comment_loading | !data || !comment_data) {
     if (postId) return <Loader />;
@@ -60,6 +60,7 @@ function Post({ id }) {
   } else {
     const { seePost: post } = data;
     const comments = comment_data?.getMoreComments;
+
     return (
       <PostContainer
         id={post.id}

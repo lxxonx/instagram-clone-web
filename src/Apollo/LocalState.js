@@ -1,9 +1,13 @@
 import { InMemoryCache, makeVar } from "@apollo/client";
-import { offsetLimitPagination } from "@apollo/client/utilities";
+import {
+  offsetLimitPagination,
+  relayStylePagination,
+} from "@apollo/client/utilities";
 export const isLoggedInVar = makeVar(
   localStorage.getItem("token") === null ? false : true
 );
 export const myUsernameVar = makeVar("");
+
 export const cache = new InMemoryCache({
   typePolicies: {
     Query: {
@@ -27,20 +31,34 @@ export const cache = new InMemoryCache({
         //   },
         // },
         getMoreComments: {
-          keyArgs: false,
-          comments: {
-            // The keyArgs list and merge function are the same as above.
+          keyArgs: ["postId"],
 
-            merge(existing, incoming, { args: { offset = 0 } }) {
-              console.log(existing);
-              const merged = existing ? existing.slice(0) : [];
-              for (let i = 0; i < incoming.length; ++i) {
-                merged[offset + i] = incoming[i];
-              }
-              return merged;
-            },
+          merge(existing, incoming, { args: { limit = 5 } }) {
+            const merged =
+              existing !== undefined ? existing.comments.slice(0) : [];
+            let offset = merged.length;
+            for (let i = 0; i < incoming.comments.length; ++i) {
+              merged[offset + i] = incoming.comments[i];
+            }
+            const result = {
+              cursor: incoming.cursor,
+              hasMore: incoming.hasMore,
+              comments: merged,
+            };
+            return result;
+          },
+
+          read(existing) {
+            if (existing) {
+              return {
+                cursor: existing.cursor,
+                hasMore: existing.hasMore,
+                comments: Object.values(existing.comments),
+              };
+            }
           },
         },
+
         getMessages: {
           merge(existing, incoming, { args: { offset = 0 } }) {
             // Slicing is necessary because the existing data is
@@ -54,22 +72,6 @@ export const cache = new InMemoryCache({
         },
       },
     },
-
-    // Post: {
-    //   fields: {
-    //     comments: {
-    //       keyArgs: [],
-
-    //       merge(existing, incoming, { args: { offset = 0 } }) {
-    //         const merged = existing ? existing.slice(0) : [];
-    //         for (let i = 0; i < incoming.length; ++i) {
-    //           merged[offset + i] = incoming[i];
-    //         }
-    //         return merged;
-    //       },
-    //     },
-    //   },
-    // },
     User: {
       merge: true,
     },
@@ -99,17 +101,7 @@ export const resolvers = {
     },
     logUserOut: (_, __, { cache }) => {
       localStorage.removeItem("token");
-      // cache.writeQuery({
-      //   query: gql`
-      //     query isLoggedIn {
-      //       isLoggedIn
-      //     }
-      //   `,
-      //   data: {
-      //     isLoggedIn: false,
-      //   },
-      // });
-      // redirect/ reopen the window
+
       isLoggedInVar(false);
       window.location.reload("/");
       return null;

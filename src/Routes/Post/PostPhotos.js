@@ -121,13 +121,8 @@ function PostPhotos({
         </>
       ) : (
         <PostPhoto
-          onDoubleClick={(e) => {
-            if (
-              !slideButtonLeft.current.contains(e.target) &&
-              !slideButtonRight.current.contains(e.target)
-            ) {
-              toggleLike();
-            }
+          onDoubleClick={() => {
+            toggleLike();
           }}
           src={photos[0].url}
           id={photos[0].id}

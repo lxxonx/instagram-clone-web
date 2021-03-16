@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { BiDotsHorizontalRounded } from "react-icons/bi";
+import ModalMenu from "./ModalMenu";
 
 const FeedHeader = styled.header`
   align-items: center;
@@ -66,7 +67,9 @@ const Location = styled(Link)`
   font-size: 13px;
   font-weight: 400;
 `;
-function PostHeader({ username, avatar, amIFollowing, isSelf, location }) {
+function PostHeader({ username, avatar, amIFollowing, isSelf, location, id }) {
+  const [modal, setModal] = useState(false);
+
   if (amIFollowing === undefined) {
     return (
       <FeedHeader>
@@ -76,9 +79,19 @@ function PostHeader({ username, avatar, amIFollowing, isSelf, location }) {
           </OwnerAvatar>
           <OwnerName to={`/${username}`}>{username}</OwnerName>
         </Owner>
-        <PostMenu>
+        <PostMenu
+          onClick={() => {
+            setModal(true);
+          }}
+        >
           <BiDotsHorizontalRounded />
         </PostMenu>
+        <ModalMenu
+          id={id}
+          showing={modal}
+          setModal={setModal}
+          isSelf={isSelf}
+        />
       </FeedHeader>
     );
   } else {
@@ -99,9 +112,19 @@ function PostHeader({ username, avatar, amIFollowing, isSelf, location }) {
 
           {isSelf ? null : <div>{amIFollowing ? "following" : "follow"}</div>}
         </Owner>
-        <PostMenu>
+        <PostMenu
+          onClick={() => {
+            setModal(true);
+          }}
+        >
           <BiDotsHorizontalRounded />
         </PostMenu>
+        <ModalMenu
+          id={id}
+          showing={modal}
+          setModal={setModal}
+          isSelf={isSelf}
+        />
       </Header>
     );
   }
