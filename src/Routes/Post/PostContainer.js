@@ -22,20 +22,20 @@ const FeedWrapper = styled.article`
   margin-bottom: 40px;
   display: flex;
   flex-direction: column;
+  display: table;
 `;
 const Photos = styled.div`
   overflow: hidden;
   width: 100%;
   height: 100%;
   max-width: 598px;
-  max-height: 598px;
+  display: table-row;
 `;
 const FeedPhotos = styled.div`
   overflow: hidden;
   width: 100%;
   height: 100%;
   max-width: 614px;
-  max-height: 614px;
 `;
 const Sections = styled.div`
   display: flex;
@@ -47,10 +47,10 @@ const Sections = styled.div`
 const AvatarWrapper = styled.div`
   margin-right: 14px;
 `;
-const CreatedTime = styled.section`
+const GrayText = styled.section`
   display: flex;
   color: ${(props) => props.theme.darkGreyColor};
-  font-size: 10px;
+  font-size: ${(props) => props.font_size};
   padding: 0 16px;
   margin-top: 5px;
   text-transform: uppercase;
@@ -62,19 +62,9 @@ const CreatedTime = styled.section`
       visibility: visible;
     }
   }
-  order: ${(props) => props.order};
+  ${(props) => (props.order ? `order: ${props.order}` : `margin-bottom: 3px`)};
 `;
-const CreatedDate = styled.span`
-  position: absolute;
-  visibility: hidden;
-  width: 120px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-  z-index: 1;
-`;
+
 const NumberOfLikes = styled.section`
   display: flex;
   font-size: 16px;
@@ -132,7 +122,9 @@ const TextCreated = styled.div`
 `;
 const Caption = styled.span`
   vertical-align: baseline;
-  overflow-wrap: break-word;
+  overflow-inline: inherit;
+  overflow-wrap: anywhere;
+  margin-right: 5px;
   span {
     white-space: pre-wrap;
   }
@@ -151,14 +143,15 @@ function PostContainer({
   numberOfLikes,
   caption,
   location,
+  numberOfComments,
   comments,
   fetchMoreComments,
 }) {
   const { postId } = useParams();
   const [likesCount, setLikesCount] = useState(numberOfLikes);
   const [liked, setLiked] = useState(isLiked);
-  const [limit, setLimit] = useState(5);
-
+  const [newComments] = useState([]);
+  const [newCommentAdded, setNewCommentAdded] = useState(false);
   const timeAgo = timeSince(createdAt);
   const createdDate = full_date(createdAt);
   const captionArr = caption.split(" ", 20).join(" ");
@@ -185,7 +178,11 @@ function PostContainer({
       setCurrentSlide(currentSlide - 1);
     }
   };
-  useEffect(() => {}, [comments, limit]);
+  useEffect(() => {
+    if (newCommentAdded) {
+      setNewCommentAdded(false);
+    }
+  }, [newCommentAdded, newComments]);
   if (postId) {
     return (
       <Wrapper>
@@ -241,16 +238,14 @@ function PostContainer({
             {comments.hasMore ? (
               <button
                 onClick={() => {
-                  const currentLength = comments.comments.length;
                   fetchMoreComments({
                     variables: {
-                      cursor: comments?.cursor,
+                      cursor: comments.cursor,
                     },
                   });
                 }}
               >
-                {" "}
-                +{" "}
+                +
               </button>
             ) : null}
             <CommentsText>
@@ -277,6 +272,29 @@ function PostContainer({
                 );
               })}
             </CommentsText>
+
+            {newComments.map((comment, index) => {
+              return (
+                <Comment key={index}>
+                  <AvatarWrapper>
+                    <Avatar src={comment.user.avatar} size={38} />
+                  </AvatarWrapper>
+                  <Text>
+                    <Username>
+                      <Link to={`/${comment.user.username}`}>
+                        {comment.user.username}
+                      </Link>
+                    </Username>
+                    <Caption>
+                      <span>{comment.text}</span>
+                    </Caption>
+                    <TextCreated>
+                      {timeSince(new Date(comment.createdAt * 1))}
+                    </TextCreated>
+                  </Text>
+                </Comment>
+              );
+            })}
           </Comments>
 
           <PostIcons
@@ -291,15 +309,26 @@ function PostContainer({
           <NumberOfLikes order={4}>
             <strong>{likesCount} likes</strong>
           </NumberOfLikes>
-          <CreatedTime order={5}>{createdDate}</CreatedTime>
-          <PostAddComment order={6} id={id} />
+          <GrayText order={5}>{createdDate}</GrayText>
+          <PostAddComment
+            order={6}
+            id={id}
+            newComments={newComments}
+            setNewCommentAdded={setNewCommentAdded}
+          />
         </Sections>
       </Wrapper>
     );
   } else {
     return (
       <FeedWrapper>
-        <PostHeader username={user.username} avatar={user.avatar} id={id} />
+        <PostHeader
+          username={user.username}
+          avatar={user.avatar}
+          isSelf={user.isSelf}
+          location={location}
+          id={id}
+        />
 
         <FeedPhotos>
           <PostPhotos
@@ -325,13 +354,17 @@ function PostContainer({
               <strong>{likesCount} likes</strong>
             </NumberOfLikes>
           )}
-          {/* {fetchmore } */}
 
-          <CreatedTime order={5}>
+          <GrayText order={5} font_size={"10px"}>
             <Link to={`/p/${id}`}>{timeAgo} ago</Link>
-          </CreatedTime>
+          </GrayText>
 
-          <PostAddComment order={6} id={id} />
+          <PostAddComment
+            order={6}
+            id={id}
+            newComments={newComments}
+            setNewCommentAdded={setNewCommentAdded}
+          />
           <Comments order={4}>
             <Text>
               <Username>
@@ -344,11 +377,37 @@ function PostContainer({
                 </span>
               </Caption>
             </Text>
-            {
-              // comments.comments.map((c) => {
-              //   return null;
-              // })
-            }
+            {numberOfComments > 2 && (
+              <GrayText font_size={"14px"}>
+                <Link to={`/p/${id}`}>see all {numberOfComments} comments</Link>
+              </GrayText>
+            )}
+            {comments.comments.slice(0, 2).map((c, index) => {
+              return (
+                <Text key={index}>
+                  <Username>
+                    <Link to={`/${c.user.username}`}>{c.user.username}</Link>
+                  </Username>
+                  <Caption>
+                    <span>{c.text}</span>
+                  </Caption>
+                </Text>
+              );
+            })}
+            {newComments.map((comment, index) => {
+              return (
+                <Text key={index}>
+                  <Username>
+                    <Link to={`/${comment.user.username}`}>
+                      {comment.user.username}
+                    </Link>
+                  </Username>
+                  <Caption>
+                    <span>{comment.text}</span>
+                  </Caption>
+                </Text>
+              );
+            })}
           </Comments>
         </Sections>
       </FeedWrapper>

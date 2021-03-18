@@ -4,6 +4,7 @@ import { useHistory } from "react-router";
 import styled from "styled-components";
 import { toast } from "react-toastify";
 import { refreshPage } from "../../Components/Util";
+import Modal from "../../Components/Modal";
 
 export const EDIT_POST = gql`
   mutation editPost(
@@ -16,27 +17,6 @@ export const EDIT_POST = gql`
   }
 `;
 const DELETE = "DELETE";
-const ModalWrapper = styled.div`
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  background-color: rgba(1, 1, 1, 0.5);
-  z-index: 100;
-  display: ${(props) => (props.showing ? "block" : "none")};
-`;
-const ModalContents = styled.div`
-  position: absolute;
-  background-color: white;
-  width: 400px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border-radius: 15px;
-`;
 const MenuItems = styled.div`
   width: 100%;
   height: 48px;
@@ -50,65 +30,44 @@ const MenuItems = styled.div`
   }
 `;
 function ModalMenu({ showing, setModal, id, isSelf }) {
-  const modalRef = useRef();
-  const [deletePost] = useMutation(EDIT_POST, {
+  const history = useHistory();
+  const [deletePost, { loading }] = useMutation(EDIT_POST, {
     variables: {
       id: id,
       action: DELETE,
     },
   });
-  useEffect(() => {
-    const handleClickAway = (e) => {
-      if (modalRef && !modalRef.current.contains(e.target)) {
-        setModal(false);
-      }
-    };
-
-    if (showing) {
-      window.addEventListener("click", handleClickAway);
-      document.body.style.cssText = `overflow-y: hidden;`;
-    }
-    return () => {
-      if (showing) {
-        window.removeEventListener("click", handleClickAway);
-        document.body.style.cssText = `overflow-y: scroll;`;
-      }
-    };
-  }, [modalRef, showing, setModal]);
   return (
-    <ModalWrapper showing={showing}>
-      <ModalContents ref={modalRef}>
-        {isSelf && <MenuItems>edit</MenuItems>}
-        <MenuItems>send</MenuItems>
-        {isSelf && (
-          <MenuItems
-            style={{ color: "red" }}
-            onClick={async () => {
-              await deletePost({
-                update: (_, { data }) => {
-                  if (!data.editPost) {
-                    toast.error(<div>An error occured, sorry retry again</div>);
-                  } else {
-                    toast.success(<div>The post has been removed</div>);
-                  }
-                  refreshPage();
-                },
-              });
-            }}
-          >
-            delete
-          </MenuItems>
-        )}
-
+    <Modal showing={showing} setModal={setModal}>
+      {isSelf && <MenuItems>edit</MenuItems>}
+      <MenuItems>send</MenuItems>
+      {isSelf && (
         <MenuItems
-          onClick={() => {
-            setModal(false);
+          style={{ color: "red" }}
+          onClick={async () => {
+            await deletePost({
+              update: (_, { data }) => {
+                if (!data.editPost) {
+                  toast.error(<div>An error occured, sorry retry again</div>);
+                } else {
+                  toast.success(<div>The post has been removed</div>);
+                }
+                history.push("/");
+              },
+            });
           }}
         >
-          Cancel
+          {loading ? "loading" : "delete"}
         </MenuItems>
-      </ModalContents>
-    </ModalWrapper>
+      )}
+      <MenuItems
+        onClick={() => {
+          setModal(false);
+        }}
+      >
+        Cancel
+      </MenuItems>
+    </Modal>
   );
 }
 

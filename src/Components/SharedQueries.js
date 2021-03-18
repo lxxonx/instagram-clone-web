@@ -25,7 +25,14 @@ export const LIKE = gql`
 `;
 export const ADD_COMMENT = gql`
   mutation addComment($postId: String!, $text: String!) {
-    addComment(postId: $postId, text: $text)
+    addComment(postId: $postId, text: $text) {
+      text
+      createdAt
+      user {
+        username
+        avatar
+      }
+    }
   }
 `;
 export const GET_COMMENT = gql`

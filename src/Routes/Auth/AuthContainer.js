@@ -77,11 +77,6 @@ function AuthContainer() {
                     "you can't log in. something wrong with the token"
                   );
                 }
-                toast.success(
-                  <div>
-                    Welcome, <strong>{login.user.username}</strong>
-                  </div>
-                );
               } else {
                 //there is an error then toast the error
                 toastError(login.error);

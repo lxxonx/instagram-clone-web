@@ -1,5 +1,5 @@
 import { gql, useQuery } from "@apollo/client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import Avatar, { MyAvatar } from "../Components/Avatar";
@@ -11,45 +11,49 @@ import FeedStory from "./FeedStory";
 import Post from "./Post";
 
 const FEED_QUERY = gql`
-  query getFeed($limit: Int!, $offset: Int) {
-    getFeed(limit: $limit, offset: $offset) {
-      id
-      caption
-      isLiked
-      createdAt
-      location
-      isSaved
-      hasMoreComments
-      numberOfComments
-      comments {
-        text
-        user {
-          username
-        }
+  query getFeed($limit: Int!, $cursor: String) {
+    getFeed(limit: $limit, cursor: $cursor) {
+      feed {
+        id
+        caption
+        isLiked
         createdAt
-        id
-      }
-      likes {
-        id
-        user {
-          username
+        location
+        isSaved
+        hasMoreComments
+        numberOfComments
+        comments {
+          text
+          user {
+            username
+          }
+          createdAt
+          id
         }
-      }
-      photos {
-        id
-        tagged {
+        likes {
+          id
           user {
             username
           }
         }
-        url
+        photos {
+          id
+          tagged {
+            user {
+              username
+            }
+          }
+          url
+        }
+        numberOfLikes
+        user {
+          avatar
+          amIFollowing
+          username
+        }
       }
-      numberOfLikes
-      user {
-        avatar
-        amIFollowing
-        username
-      }
+      cursor
+      hasMore
     }
   }
 `;
@@ -117,65 +121,47 @@ const LinkWrapper = styled(Link)`
 `;
 function Feed() {
   const [limit, setLimit] = useState(5);
-  const [hasMore, setHasMore] = useState(true);
   const { loading, data, fetchMore } = useQuery(FEED_QUERY, {
-    variables: { limit, offset: 0 },
-    fetchPolicy: "cache-and-network",
+    variables: { limit },
   });
   const { data: meData } = useQuery(ME);
   const width = useWidth();
-  // const handleScroll = () => {
-  //   const scrollHeight = document.documentElement.scrollHeight;
-  //   const scrollTop = document.documentElement.scrollTop;
-  //   const clientHeight = document.documentElement.clientHeight;
-  //   if (scrollTop + clientHeight >= scrollHeight && loading === false) {
-  //   }
-  // };
-  // useEffect(() => {
-  //   // scroll event listener 등록
-  //   window.addEventListener("scroll", handleScroll);
-  //   return () => {
-  //     // scroll event listener 해제
-  //     window.removeEventListener("scroll", handleScroll);
-  //   };
-  // });
+
+  useEffect(() => {
+    function onScroll() {
+      let currentPosition = window.pageYOffset; // or use document.documentElement.scrollTop;
+      let currentHeight = document.documentElement.scrollHeight;
+      if (currentPosition >= currentHeight * 0.7) {
+        // downscroll code
+        console.log("hi");
+      }
+    }
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   if (loading || !data || !meData) {
     return <Loader />;
   } else {
     const { getFeed } = data;
     const { me } = meData;
-    if (getFeed.length > 5) {
-      setHasMore(true);
-    }
     return (
       <>
         <Wrapper width={width}>
           <FeedPage width={width}>
             <FeedStory />
-            {getFeed.length > 0
-              ? getFeed.map((post, index) => {
+            {getFeed.feed.length > 0
+              ? getFeed.feed.map((post, index) => {
                   return <Post key={index} id={post.id} />;
                 })
               : "There is NO post to show. Let's post something"}
-            {hasMore && (
+            {getFeed.hasMore && (
               <button
                 onClick={() => {
-                  const currentLength = getFeed.length;
                   fetchMore({
                     variables: {
-                      offset: getFeed.length,
+                      cursor: getFeed.cursor,
                       limit: 5,
                     },
-                  }).then((fetchMoreResult) => {
-                    // Update variables.limit for the original query to include
-                    // the newly added feed items.
-                    console.log(fetchMoreResult);
-                    if (fetchMoreResult.data.getFeed.length.length < limit) {
-                      setHasMore(false);
-                    }
-                    setLimit(
-                      currentLength + fetchMoreResult.data.getFeed.length
-                    );
                   });
                 }}
               >

@@ -1,9 +1,9 @@
 import { useMutation } from "@apollo/client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import styled from "styled-components";
-import { ADD_COMMENT, GET_COMMENT } from "../../Components/SharedQueries";
 import TextareaAutosize from "react-textarea-autosize";
+import styled from "styled-components";
+import { ADD_COMMENT } from "../../Components/SharedQueries";
 
 const Wrapper = styled.section`
   bottom: 0;
@@ -57,16 +57,20 @@ const PostButton = styled.button`
     outline: none;
   }
 `;
-function PostAddComment({ order, id }) {
-  const { register, watch, handleSubmit, setValue, control } = useForm();
+function PostAddComment({ order, id, newComments, setNewCommentAdded }) {
+  const { register, watch, handleSubmit, setValue } = useForm();
   const text = watch("text");
   const [addComment] = useMutation(ADD_COMMENT, {
     variables: { text, postId: id },
-    refetchQueries: [{ query: GET_COMMENT, variables: { postId: id } }],
   });
 
   const handleAddComment = async (e) => {
-    await addComment();
+    await addComment({
+      update: (_, { data }) => {
+        newComments.push(data.addComment);
+        setNewCommentAdded(true);
+      },
+    });
     setValue("text", "");
   };
 
@@ -82,7 +86,7 @@ function PostAddComment({ order, id }) {
     if (watch("text").includes("@")) {
       console.log("@");
     }
-  }, [watch()]);
+  }, [watch]);
   return (
     <Wrapper order={order}>
       <AddComment onSubmit={handleSubmit(handleAddComment)}>

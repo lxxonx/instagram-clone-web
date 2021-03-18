@@ -1,21 +1,40 @@
 import { InMemoryCache, makeVar } from "@apollo/client";
-import {
-  offsetLimitPagination,
-  relayStylePagination,
-} from "@apollo/client/utilities";
+import { offsetLimitPagination } from "@apollo/client/utilities";
 export const isLoggedInVar = makeVar(
   localStorage.getItem("token") === null ? false : true
 );
 export const myUsernameVar = makeVar("");
-
+export const feedCursorVar = makeVar("");
 export const cache = new InMemoryCache({
   typePolicies: {
     Query: {
       fields: {
-        // isLoggedIn() {
-        //   return localStorage.getItem("token") === null ? false : true;
-        // },
-        getFeed: offsetLimitPagination(),
+        getFeed: {
+          merge(existing, incoming, { args: { limit, cursor } }) {
+            const merged = existing !== undefined ? existing.feed.slice(0) : [];
+            let offset = merged.length;
+            for (let i = 0; i < incoming.feed.length; ++i) {
+              merged[offset + i] = incoming.feed[i];
+            }
+
+            const result = {
+              cursor: incoming.cursor,
+              hasMore: incoming.hasMore,
+              feed: merged,
+            };
+            return result;
+          },
+
+          read(existing) {
+            if (existing) {
+              return {
+                cursor: existing.cursor,
+                hasMore: existing.hasMore,
+                feed: Object.values(existing.feed),
+              };
+            }
+          },
+        },
         getProfilePost: offsetLimitPagination(),
         // {
         //   read(existing, { args: { offset, limit } }) {
@@ -33,7 +52,7 @@ export const cache = new InMemoryCache({
         getMoreComments: {
           keyArgs: ["postId"],
 
-          merge(existing, incoming, { args: { limit = 5 } }) {
+          merge(existing, incoming, { args: { limit, cursor } }) {
             const merged =
               existing !== undefined ? existing.comments.slice(0) : [];
             let offset = merged.length;

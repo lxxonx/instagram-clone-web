@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import styled from "styled-components";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
 import { BiDotsHorizontalRounded } from "react-icons/bi";
+import { Link } from "react-router-dom";
+import styled from "styled-components";
 import ModalMenu from "./ModalMenu";
 
 const FeedHeader = styled.header`
@@ -69,7 +69,6 @@ const Location = styled(Link)`
 `;
 function PostHeader({ username, avatar, amIFollowing, isSelf, location, id }) {
   const [modal, setModal] = useState(false);
-
   if (amIFollowing === undefined) {
     return (
       <FeedHeader>
@@ -133,5 +132,8 @@ PostHeader.propTypes = {
   username: PropTypes.string.isRequired,
   avatar: PropTypes.string.isRequired,
   amIFollowing: PropTypes.bool,
+  isSelf: PropTypes.bool,
+  location: PropTypes.string,
+  id: PropTypes.string.isRequired,
 };
 export default PostHeader;
