@@ -60,6 +60,7 @@ const PostInfo = styled.div`
 `;
 const OwnerName = styled(Link)`
   ${(props) => props.theme.usernameText};
+  margin-left: 8px;
   font-size: 16px;
 `;
 const Location = styled(Link)`

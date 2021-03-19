@@ -31,9 +31,9 @@ function Posted({ username }) {
               return (
                 <Link to={`/p/${post.id}`} key={index}>
                   <ProfilePosts
-                    postId={post.id}
                     key={index}
                     url={post.photos[0].url}
+                    isManyPhotos={post.photos.length > 1}
                     numberOfLikes={post.numberOfLikes}
                     numberOfComments={post.numberOfComments}
                   />

@@ -1,9 +1,8 @@
 import { gql, useMutation } from "@apollo/client";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { useHistory } from "react-router";
-import styled from "styled-components";
 import { toast } from "react-toastify";
-import { refreshPage } from "../../Components/Util";
+import styled from "styled-components";
 import Modal from "../../Components/Modal";
 
 export const EDIT_POST = gql`

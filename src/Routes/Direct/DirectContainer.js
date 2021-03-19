@@ -18,6 +18,10 @@ export const CHAT_LIST = gql`
         username
         avatar
       }
+      participantsExceptMe {
+        username
+        avatar
+      }
     }
   }
 `;
@@ -47,7 +51,7 @@ const List = styled.li`
   }
   cursor: pointer;
 `;
-const Name = styled(Username)`
+export const Name = styled(Username)`
   margin: 13px;
 `;
 const Updated = styled.div`
@@ -124,20 +128,6 @@ function DirectContainer() {
   if (!data || loading) return <Loader />;
   else {
     const { chatList } = data;
-
-    const users = [
-      ...chatList?.map((chat) => {
-        let usersXme = {};
-        chat.participants.map((p) => {
-          if (p.username !== myUsername) {
-            usersXme = { ...usersXme, ...p };
-          }
-          return null;
-        });
-        usersXme = { id: chat.id, ...usersXme, updatedAt: chat.updatedAt };
-        return usersXme;
-      }),
-    ];
     return (
       <>
         <NewMessageModal showing={modal} setModal={setModal} />
@@ -154,17 +144,39 @@ function DirectContainer() {
               </IconButton>
             </Header>
             <ChatList>
-              {users.map((u, index) => {
-                let updatedSince = timeSince(u.updatedAt);
+              {chatList.map((chat, index) => {
+                let updatedSince = timeSince(chat.updatedAt);
                 return (
                   <List
                     key={index}
                     onClick={() => {
-                      history.push(`/direct/t/${u.id}`);
+                      history.push(`/direct/t/${chat.id}`);
                     }}
                   >
-                    <Avatar size={56} src={u.avatar} />
-                    <Name>{u.username}</Name>
+                    {chat.participantsExceptMe.length > 1 ? (
+                      chat.participantsExceptMe.map((person, index) => {
+                        if (index !== chat.participantsExceptMe.length - 1) {
+                          return <Avatar size={30} src={person.avatar} />;
+                        } else {
+                          return <Avatar size={30} src={person.avatar} />;
+                        }
+                      })
+                    ) : (
+                      <Avatar
+                        size={56}
+                        src={chat.participantsExceptMe[0].avatar}
+                      />
+                    )}
+
+                    <Name>
+                      {chat.participantsExceptMe.map((person, index) => {
+                        if (index !== chat.participantsExceptMe.length - 1) {
+                          return `${person.username}, `;
+                        } else {
+                          return `${person.username}`;
+                        }
+                      })}
+                    </Name>
                     <Updated>{updatedSince}</Updated>
                   </List>
                 );

@@ -12,6 +12,8 @@ const Post = styled.div`
   max-height: 293px;
   height: 100%;
   width: 100%;
+  display: flex;
+  position: relative;
 `;
 const Info = styled.div`
   display: flex;
@@ -27,6 +29,12 @@ const Info = styled.div`
     opacity: 1;
   }
 `;
+const StackIcon = styled.div`
+  position: absolute;
+  font-size: 26px;
+  right: 10px;
+  top: 10px;
+`;
 const Text = styled.div`
   color: white;
   font-size: 26px;
@@ -35,9 +43,10 @@ const Text = styled.div`
   }
 `;
 
-function ProfilePosts({ url, numberOfLikes, numberOfComments }) {
+function ProfilePosts({ url, numberOfLikes, numberOfComments, isManyPhotos }) {
   return (
     <Post src={url}>
+      {isManyPhotos && <StackIcon>📑</StackIcon>}
       <Info>
         <Text>❤️{numberOfLikes}</Text>
         <Text>💬{numberOfComments}</Text>
@@ -49,5 +58,6 @@ ProfilePosts.propTypes = {
   url: PropTypes.string.isRequired,
   numberOfLikes: PropTypes.number.isRequired,
   numberOfComments: PropTypes.number.isRequired,
+  isManyPhotos: PropTypes.bool.isRequired,
 };
 export default ProfilePosts;

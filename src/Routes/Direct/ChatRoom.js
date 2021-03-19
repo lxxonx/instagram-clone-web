@@ -2,9 +2,12 @@ import { gql, useMutation, useQuery } from "@apollo/client";
 import React from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import styled from "styled-components";
+import Avatar from "../../Components/Avatar";
 import useInput from "../../Hooks/useInput";
-import { CHAT_LIST } from "./DirectContainer";
+import { CHAT_LIST, Name } from "./DirectContainer";
+import PropTypes from "prop-types";
 import Messages from "./Messages";
+import { Link } from "react-router-dom";
 const GET_MESSAGES = gql`
   query getMessages($chatId: String!, $limit: Int, $offset: Int) {
     getMessages(chatId: $chatId, limit: $limit, offset: $offset) {
@@ -22,17 +25,27 @@ const SEND_MESSAGE = gql`
     sendMessage(chatId: $chatId, text: $text)
   }
 `;
-
+const GET_CHAT = gql`
+  query getIntoChat($chatId: String!) {
+    getIntoChat(chatId: $chatId) {
+      participantsExceptMe {
+        username
+        avatar
+      }
+    }
+  }
+`;
 const Wrapper = styled.section`
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
 `;
 const Header = styled.div`
+  padding: 20px;
   width: 100%;
   height: 60px;
   display: flex;
-  justify-content: center;
+  justify-content: left;
   align-items: center;
   text-align: center;
   vertical-align: center;
@@ -77,8 +90,12 @@ const SendButton = styled.button`
     }
   }};
 `;
+
 function ChatRoom({ chatId }) {
   const { data, subscribeToMore, loading } = useQuery(GET_MESSAGES, {
+    variables: { chatId },
+  });
+  const { data: chatData } = useQuery(GET_CHAT, {
     variables: { chatId },
   });
   const messageInput = useInput();
@@ -105,11 +122,47 @@ function ChatRoom({ chatId }) {
       },
     });
   };
-  if (loading || !data) return null;
+  if (loading || !data || !chatData) return null;
   else {
+    const { getIntoChat } = chatData;
     return (
       <>
-        <Header></Header>
+        <Header>
+          <>
+            {getIntoChat.participantsExceptMe.length > 1 ? (
+              <>
+                {getIntoChat.participantsExceptMe.map((person, index) => {
+                  if (index !== getIntoChat.participantsExceptMe.length - 1) {
+                    return <Avatar size={30} src={person.avatar} />;
+                  } else {
+                    return <Avatar size={30} src={person.avatar} />;
+                  }
+                })}
+                <Name>
+                  {getIntoChat.participantsExceptMe.map((person, index) => {
+                    if (index !== getIntoChat.participantsExceptMe.length - 1) {
+                      return `${person.username}, `;
+                    } else {
+                      return `${person.username}`;
+                    }
+                  })}
+                </Name>
+              </>
+            ) : (
+              <>
+                <Link to={`/${getIntoChat.participantsExceptMe[0].username}`}>
+                  <Avatar
+                    size={28}
+                    src={getIntoChat.participantsExceptMe[0].avatar}
+                  />
+                </Link>
+                <Link to={`/${getIntoChat.participantsExceptMe[0].username}`}>
+                  <Name>{getIntoChat.participantsExceptMe[0].username}</Name>
+                </Link>
+              </>
+            )}
+          </>
+        </Header>
         <Wrapper>
           <Messages
             data={data}

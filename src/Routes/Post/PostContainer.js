@@ -6,6 +6,7 @@ import styled from "styled-components";
 import Avatar from "../../Components/Avatar";
 import { LIKE } from "../../Components/SharedQueries";
 import { full_date, timeSince } from "../../Components/Util";
+import useWidth from "../../Hooks/useWidth";
 import { Divider } from "../../Styles/Divider";
 import PostAddComment from "./PostAddComment";
 import PostHeader from "./PostHeader";
@@ -18,11 +19,13 @@ const Wrapper = styled.article`
   flex-direction: row;
 `;
 const FeedWrapper = styled.article`
-  ${(props) => props.theme.whiteBox};
   margin-bottom: 40px;
   display: flex;
   flex-direction: column;
   display: table;
+  @media only screen and (min-width: 640px) {
+    ${(props) => props.theme.whiteBox};
+  }
 `;
 const Photos = styled.div`
   overflow: hidden;
@@ -85,6 +88,24 @@ const Comments = styled.section`
   }
   flex-direction: column;
   height: 100%;
+`;
+
+const SeeMoreCommentsBtn = styled.button`
+  border: 0;
+  background-color: transparent;
+  margin-bottom: 8px;
+  :focus {
+    outline: none;
+  }
+  cursor: pointer;
+`;
+const PlusIcon = styled.div`
+  border: 1px solid black;
+  width: 30px;
+  height: 30px;
+  line-height: 28px;
+  border-radius: 50%;
+  margin: auto;
 `;
 const Comment = styled.div`
   display: flex;
@@ -155,6 +176,7 @@ function PostContainer({
   const timeAgo = timeSince(createdAt);
   const createdDate = full_date(createdAt);
   const captionArr = caption.split(" ", 20).join(" ");
+  const width = useWidth();
 
   const [toggleLike] = useMutation(LIKE, {
     variables: { postId: id },
@@ -236,7 +258,7 @@ function PostContainer({
               </Comment>
             )}
             {comments.hasMore ? (
-              <button
+              <SeeMoreCommentsBtn
                 onClick={() => {
                   fetchMoreComments({
                     variables: {
@@ -245,8 +267,8 @@ function PostContainer({
                   });
                 }}
               >
-                +
-              </button>
+                <PlusIcon>➕</PlusIcon>
+              </SeeMoreCommentsBtn>
             ) : null}
             <CommentsText>
               {comments.comments.map((comment, index) => {
@@ -358,13 +380,15 @@ function PostContainer({
           <GrayText order={5} font_size={"10px"}>
             <Link to={`/p/${id}`}>{timeAgo} ago</Link>
           </GrayText>
+          {width >= 640 && (
+            <PostAddComment
+              order={6}
+              id={id}
+              newComments={newComments}
+              setNewCommentAdded={setNewCommentAdded}
+            />
+          )}
 
-          <PostAddComment
-            order={6}
-            id={id}
-            newComments={newComments}
-            setNewCommentAdded={setNewCommentAdded}
-          />
           <Comments order={4}>
             <Text>
               <Username>

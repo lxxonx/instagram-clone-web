@@ -19,6 +19,6 @@ const Theme = {
             `,
   usernameText: `
                 font-size: 15px;
-                font-weight: 900;`,
+                font-weight: 600;`,
 };
 export default Theme;

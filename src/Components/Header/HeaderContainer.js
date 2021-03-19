@@ -58,7 +58,7 @@ const LogoWrapper = styled(Link)`
   margin: 0;
   padding: 0;
   position: relative;
-  flex: 1 9999 0%;
+  flex: 1 0 0%;
   min-width: 40px;
   cursor: pointer;
 `;

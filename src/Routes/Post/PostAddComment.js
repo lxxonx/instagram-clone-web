@@ -78,7 +78,7 @@ function PostAddComment({ order, id, newComments, setNewCommentAdded }) {
     const { keyCode } = e;
     if (keyCode === 13 && !e.shiftKey) {
       e.preventDefault();
-      await addComment();
+      await handleAddComment();
       setValue("text", "");
     }
   };

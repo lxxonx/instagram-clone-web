@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 export const ME = gql`
-  query me {
+  query meData {
     me {
       username
       fullname
@@ -11,8 +11,21 @@ export const ME = gql`
     }
   }
 `;
+
+export const MYFOLLWERS = gql`
+  query myFollowers {
+    me {
+      following {
+        id
+        avatar
+        username
+      }
+    }
+  }
+`;
+
 export const MYAVATAR = gql`
-  query me {
+  query myAvatar {
     me {
       avatar
     }

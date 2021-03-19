@@ -13,8 +13,8 @@ export const Posts = styled.article`
 export const PostWrapper = styled.div`
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, 293px);
-  grid-template-rows: 293px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: minmax(auto, 293px);
   grid-auto-rows: 293px;
   grid-gap: 28px;
   img {

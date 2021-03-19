@@ -1,5 +1,7 @@
 import React, { useRef } from "react";
 import styled from "styled-components";
+import { GoPrimitiveDot } from "react-icons/go";
+import { useParams } from "react-router";
 
 const PostPhotoWrapper = styled.div`
   display: flex;
@@ -30,7 +32,21 @@ const PhotoListElement = styled.li`
   left: 0;
   opacity: ${(props) => (props.showing === "true" ? 1 : 0)};
 `;
-
+const PhotoIndex = styled.div`
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  justify-content: center;
+  display: flex;
+`;
+const SlideIndex = styled(GoPrimitiveDot)`
+  color: ${(props) => {
+    return props.showing === "true"
+      ? props.theme.bgColor
+      : `rgb(255, 255, 255, 0.3)`;
+  }};
+`;
 const SlideButtonLeft = styled.button`
   background-color: ${(props) => props.theme.darkGreyColor};
   display: ${(props) => (props.showing ? "block" : "none")};
@@ -79,6 +95,7 @@ function PostPhotos({
   nextSlide,
   currentSlide,
 }) {
+  const { postId } = useParams();
   const slideButtonLeft = useRef();
   const slideButtonRight = useRef();
 
@@ -96,6 +113,7 @@ function PostPhotos({
             onClick={nextSlide}
             showing={currentSlide < photos.length - 1}
           >{`>`}</SlideButtonRight>
+
           <PhotoList>
             {photos.map((photo, index) => (
               <PhotoListElement
@@ -118,6 +136,17 @@ function PostPhotos({
               </PhotoListElement>
             ))}
           </PhotoList>
+          {postId && (
+            <PhotoIndex>
+              {photos.map((photo, index) => (
+                <SlideIndex
+                  key={index}
+                  id={photo.id}
+                  showing={`${index === currentSlide}`}
+                ></SlideIndex>
+              ))}
+            </PhotoIndex>
+          )}
         </>
       ) : (
         <PostPhoto

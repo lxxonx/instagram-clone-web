@@ -29,7 +29,6 @@ export const PROFILE = gql`
 function Profile() {
   const { username } = useParams();
   const { pathname } = useLocation();
-  const [limit, setLimit] = useState(21);
   const [location, setLocation] = useState(`home`);
   const { data, loading } = useQuery(PROFILE, {
     variables: { username },

@@ -1,7 +1,7 @@
 import { useMutation } from "@apollo/client";
 import React, { useState } from "react";
 import { GoPrimitiveDot } from "react-icons/go";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import {
   EmptyHeartIcon,
@@ -24,7 +24,7 @@ const IconWrapper = styled.section`
 `;
 
 const IconButtons = styled.button`
-  background-color: white;
+  background-color: transparent;
   padding: 8px;
   border: 0;
   width: 40px;
@@ -89,9 +89,11 @@ function PostIcons({
         <IconButtons onClick={toggleLike}>
           {liked ? <FilledHeartIcon size={24} /> : <EmptyHeartIcon size={24} />}
         </IconButtons>
-        <IconButtons>
-          <TextBalloon />
-        </IconButtons>
+        <Link to={`/p/${id}`}>
+          <IconButtons>
+            <TextBalloon />
+          </IconButtons>
+        </Link>
         <IconButtons>
           <PaperPlaneIconWhite size={24} />
         </IconButtons>

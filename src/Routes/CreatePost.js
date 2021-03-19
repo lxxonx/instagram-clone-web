@@ -1,8 +1,11 @@
 import { gql, useMutation } from "@apollo/client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { lazy, useEffect, useRef, useState } from "react";
 import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 import { useForm } from "react-hook-form";
+import { GoPrimitiveDot } from "react-icons/go";
+import Spinner from "../Components/Spinner";
+
 const CREATE_POST = gql`
   mutation createPost(
     $location: String
@@ -20,20 +23,51 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: row;
 `;
-const Input = styled.input`
+const Header = styled.div`
+  align-items: center;
+  vertical-align: center;
+  height: 72px;
+  display: flex;
   padding: 16px;
-  height: 2em;
+  width: 100%;
+  border-bottom: 1px solid #e6e6e6;
+`;
+const Input = styled.input`
+  height: 100%;
   border: 0;
   width: 100%;
 `;
 const Caption = styled.textarea`
   padding: 16px;
   border: 0;
+  height: 100%;
   width: 100%;
+  resize: none;
+  :focus {
+    outline: none;
+  }
 `;
 const PostButton = styled.button`
+  padding: 0;
+  height: 100%;
   width: 100px;
+  margin-left: auto;
   margin-right: 0;
+  border: 0;
+  border-radius: 4px;
+  text-transform: uppercase;
+  color: white;
+  font-weight: 600;
+  background-color: ${(props) => props.theme.blueColor};
+  ${(props) => {
+    if (props.upLoading) {
+      return `opacity: 0.7;  pointer-events: none;`;
+    }
+  }};
+  cursor: pointer;
+  :focus {
+    outline: none;
+  }
 `;
 const File = styled.input`
   border: 0;
@@ -85,6 +119,8 @@ const SlideButtonLeft = styled.button`
   font-weight: 900;
   position: absolute;
   left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
   border: 0;
   z-index: 2;
   opacity: 0.5;
@@ -105,6 +141,8 @@ const SlideButtonRight = styled.button`
   font-weight: 900;
   position: absolute;
   right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
   border: 0;
   z-index: 2;
   opacity: 0.5;
@@ -130,6 +168,22 @@ const Form = styled.form`
   display: flex;
   flex-direction: column;
 `;
+const PhotoIndex = styled.div`
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  justify-content: center;
+  display: flex;
+`;
+const SlideIndex = styled(GoPrimitiveDot)`
+  color: ${(props) => {
+    return props.showing === "true"
+      ? props.theme.bgColor
+      : `rgb(255, 255, 255, 0.4)`;
+  }};
+`;
+
 function CreatePost() {
   const history = useHistory();
 
@@ -144,7 +198,6 @@ function CreatePost() {
 
   const [length, setLength] = useState(1);
   const [previews, setPreviews] = useState([]);
-
   const TOTAL_SLIDES = length;
   const [currentSlide, setCurrentSlide] = useState(0);
   const nextSlide = () => {
@@ -158,23 +211,31 @@ function CreatePost() {
     }
   };
 
-  const [createPost] = useMutation(CREATE_POST, {
+  const [createPost, { loading }] = useMutation(CREATE_POST, {
     variables: {
       location: watch("location"),
       caption: watch("caption"),
       photos: watch("file"),
     },
   });
-
   const handleFile = ({ target }) => {
-    if (target.files.length <= 1) {
+    // no photo to upload
+    if (target.files.length === 0) {
+      setShowing(false);
+
+      // only one photo
+    } else if (target.files.length === 1) {
       let reader = new FileReader();
       reader.onload = (e) => {
         preview.current.src = e.target.result;
       };
       reader.readAsDataURL(target.files[0]);
+      setShowing(true);
+
+      // more than 1 photo
     } else {
       setLength(target.files.length);
+      setPreviews([]);
       for (let i = 0; i < target.files.length; i++) {
         let reader = new FileReader();
         reader.onload = (e) => {
@@ -182,10 +243,10 @@ function CreatePost() {
         };
         reader.readAsDataURL(target.files[i]);
       }
+      setShowing(true);
     }
-    setShowing(true);
   };
-  const onSubmit = async (e) => {
+  const onSubmit = async () => {
     let postId;
     await createPost({
       update: (_, { data, loading, errors }) => {
@@ -210,12 +271,14 @@ function CreatePost() {
           showing={showing}
           onClick={(e) => {
             if (watch("file")?.length > 1) {
+              // are there many photos?
               if (
                 !prevSlidsButton.current.contains(e.target) &&
                 !nextSlidsButton.current.contains(e.target)
               )
                 inputFile.current.click();
             } else {
+              // if it has only 1 photo to upload
               inputFile.current.click();
             }
           }}
@@ -242,6 +305,15 @@ function CreatePost() {
                   </PhotoListElement>
                 ))}
               </PhotoList>
+              <PhotoIndex>
+                {previews.map((photo, index) => (
+                  <SlideIndex
+                    key={index}
+                    id={photo.id}
+                    showing={`${index === currentSlide}`}
+                  ></SlideIndex>
+                ))}
+              </PhotoIndex>
             </>
           ) : (
             <PostPhoto ref={preview} />
@@ -258,12 +330,12 @@ function CreatePost() {
         />
       </Preview>
       <Form onSubmit={handleSubmit(onSubmit)}>
-        {/* 
-        disable button when its uploading
-        and let them know its uploading
-        */}
-        <PostButton>post</PostButton>
-        <Input placeholder={"location"} ref={register} name="location" />
+        <Header>
+          <Input placeholder={"location"} ref={register} name="location" />
+          <PostButton upLoading={loading}>
+            {loading ? <Spinner size={35} /> : "post"}
+          </PostButton>
+        </Header>
         <Caption placeholder={"caption"} ref={register} name="caption" />
       </Form>
     </Wrapper>

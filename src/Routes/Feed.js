@@ -2,10 +2,12 @@ import { gql, useQuery } from "@apollo/client";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import Avatar, { MyAvatar } from "../Components/Avatar";
+import { MyAvatar } from "../Components/Avatar";
 import Footer from "../Components/Footer";
 import Loader from "../Components/Loader";
 import { ME } from "../Components/SharedQueries";
+import Spinner from "../Components/Spinner";
+import { useScrollEnd } from "../Hooks/useScrollEnd";
 import useWidth from "../Hooks/useWidth";
 import FeedStory from "./FeedStory";
 import Post from "./Post";
@@ -66,7 +68,6 @@ const Wrapper = styled.section`
       return `30px;`;
     }
   }};
-  max-width: ${(props) => props.theme.maxWidth};
   width: 100%;
   display: flex;
   flex-direction: row;
@@ -77,6 +78,8 @@ const FeedPage = styled.div`
   max-width: ${(props) => props.theme.postMaxWidth};
   width: 100%;
   display: flex;
+  justify-content: center;
+  vertical-align: center;
   flex-direction: column;
   ${(props) => {
     if (props.width < 1000) {
@@ -119,27 +122,39 @@ const MeName = styled.div`
 const LinkWrapper = styled(Link)`
   color: black;
 `;
+const Loading = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: ${(props) => props.theme.maxWidth};
+  margin-bottom: 12px;
+`;
 function Feed() {
-  const [limit, setLimit] = useState(5);
-  const { loading, data, fetchMore } = useQuery(FEED_QUERY, {
-    variables: { limit },
+  const { data, fetchMore } = useQuery(FEED_QUERY, {
+    variables: { limit: 5 },
   });
   const { data: meData } = useQuery(ME);
   const width = useWidth();
-
+  const [loading, setLoading] = useState(false);
+  const scrollEnd = useScrollEnd();
   useEffect(() => {
-    function onScroll() {
-      let currentPosition = window.pageYOffset; // or use document.documentElement.scrollTop;
-      let currentHeight = document.documentElement.scrollHeight;
-      if (currentPosition >= currentHeight * 0.7) {
-        // downscroll code
-        console.log("hi");
+    const fetchMoreComments = async () => {
+      if (!loading) {
+        if (scrollEnd && data?.getFeed.hasMore) {
+          setLoading(true);
+          await fetchMore({
+            variables: {
+              cursor: data?.getFeed.cursor,
+              limit: 5,
+            },
+          });
+        }
+        setLoading(false);
       }
-    }
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-  if (loading || !data || !meData) {
+    };
+    fetchMoreComments();
+  }, [scrollEnd, loading]);
+  if (!data || !meData) {
     return <Loader />;
   } else {
     const { getFeed } = data;
@@ -154,19 +169,10 @@ function Feed() {
                   return <Post key={index} id={post.id} />;
                 })
               : "There is NO post to show. Let's post something"}
-            {getFeed.hasMore && (
-              <button
-                onClick={() => {
-                  fetchMore({
-                    variables: {
-                      cursor: getFeed.cursor,
-                      limit: 5,
-                    },
-                  });
-                }}
-              >
-                load more
-              </button>
+            {loading && (
+              <Loading>
+                <Spinner size={50} />
+              </Loading>
             )}
           </FeedPage>
           {width < 1000 ? null : (
