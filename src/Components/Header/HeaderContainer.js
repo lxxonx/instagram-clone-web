@@ -20,9 +20,46 @@ import NotificationMenu from "./NotificationMenu";
 import SearchInput from "./SearchInput";
 import { Menu } from "./Styles";
 import { myUsernameVar } from "../../Apollo/LocalState";
-import { useQuery } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
 import { ME } from "../SharedQueries";
-
+const NOTIFICATION = gql`
+  query notification {
+    notification {
+      id
+      newComment {
+        text
+        user {
+          username
+          avatar
+        }
+        post {
+          id
+          photos {
+            url
+          }
+        }
+      }
+      newLike {
+        user {
+          username
+          avatar
+        }
+        post {
+          id
+          photos {
+            url
+          }
+        }
+      }
+      newFollower {
+        username
+        avatar
+        amIFollowing
+      }
+      createdAt
+    }
+  }
+`;
 const Nav = styled.header`
   background-color: white;
   display: flex;
@@ -143,6 +180,7 @@ const HeartButton = styled.button`
 
 function HeaderContainer() {
   const { data, loading } = useQuery(ME);
+  const { data: notifData, subscribeToMore } = useQuery(NOTIFICATION);
 
   const { pathname } = useLocation();
   const [filled, setFilled] = useState(false);
@@ -179,10 +217,11 @@ function HeaderContainer() {
       if (filled) window.removeEventListener("click", clickAwayListener);
     };
   }, [profileborder, open, filled, width, data]);
-  if (loading || !data) {
+  if (loading || !data || !notifData) {
     return null;
   } else {
     const { me } = data;
+    const { notification } = notifData;
     return (
       <>
         <Helmet>
@@ -233,7 +272,10 @@ function HeaderContainer() {
                     <EmptyHeartIcon />
                   )}
                   <Menu showing={filled} ref={menuRef}>
-                    <NotificationMenu username={me.username}></NotificationMenu>
+                    <NotificationMenu
+                      notification={notification}
+                      subscribeToMore={subscribeToMore}
+                    ></NotificationMenu>
                   </Menu>
                 </HeartButton>
 

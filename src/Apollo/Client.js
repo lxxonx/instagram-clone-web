@@ -13,6 +13,12 @@ const wsLink = new WebSocketLink({
   uri: process.env.REACT_APP_WS_URL,
   options: {
     reconnect: true,
+    connectionParams: () => {
+      const token = localStorage.getItem("token");
+      return {
+        token: token ? `${token}` : "",
+      };
+    },
   },
 });
 const authLink = setContext((_, { headers }) => {

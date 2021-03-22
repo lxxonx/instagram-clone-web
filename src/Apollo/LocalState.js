@@ -4,15 +4,15 @@ export const isLoggedInVar = makeVar(
   localStorage.getItem("token") === null ? false : true
 );
 export const myUsernameVar = makeVar("");
-export const feedCursorVar = makeVar("");
 export const cache = new InMemoryCache({
   typePolicies: {
     Query: {
       fields: {
         getFeed: {
-          merge(existing, incoming, { args: { limit, cursor } }) {
-            console.log(existing);
-            console.log(incoming);
+          merge(existing, incoming) {
+            if (incoming.cursor === existing?.cursor) {
+              return existing;
+            }
 
             const merged = existing !== undefined ? existing.feed.slice(0) : [];
             let offset = merged.length;
@@ -38,23 +38,14 @@ export const cache = new InMemoryCache({
           },
         },
         getProfilePost: offsetLimitPagination(),
-        // {
-        //   read(existing, { args: { offset, limit } }) {
-        //     return existing && existing.slice(offset, offset + limit);
-        //   },
-        //   keyArgs: [],
-        //   merge(existing, incoming, { args: { offset = 0 } }) {
-        //     const merged = existing ? existing.slice(0) : [];
-        //     for (let i = 0; i < incoming.length; ++i) {
-        //       merged[offset + i] = incoming[i];
-        //     }
-        //     return merged;
-        //   },
-        // },
+
         getMoreComments: {
           keyArgs: ["postId"],
 
-          merge(existing, incoming, { args: { limit, cursor } }) {
+          merge(existing, incoming) {
+            if (incoming.cursor === existing?.cursor) {
+              return existing;
+            }
             const merged =
               existing !== undefined ? existing.comments.slice(0) : [];
             let offset = merged.length;
@@ -91,6 +82,18 @@ export const cache = new InMemoryCache({
             return merged;
           },
         },
+        notification: {
+          merge(existing, incoming) {
+            // Slicing is necessary because the existing data is
+            // immutable, and frozen in development.
+            const merged = existing ? existing.slice(0) : [];
+            let offset = 0;
+            for (let i = 0; i < incoming.length; ++i) {
+              merged[offset + i] = incoming[i];
+            }
+            return merged;
+          },
+        },
       },
     },
     User: {
@@ -101,7 +104,7 @@ export const cache = new InMemoryCache({
 
 export const resolvers = {
   Mutation: {
-    logUserIn: async (_, { token }, { cache }) => {
+    logUserIn: async (_, { token }) => {
       localStorage.setItem("token", token);
       // const query = gql`
       //   {
@@ -120,9 +123,8 @@ export const resolvers = {
       window.location.reload("/");
       return null;
     },
-    logUserOut: (_, __, { cache }) => {
+    logUserOut: () => {
       localStorage.removeItem("token");
-
       isLoggedInVar(false);
       window.location.reload("/");
       return null;

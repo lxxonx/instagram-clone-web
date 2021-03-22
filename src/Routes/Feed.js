@@ -159,7 +159,6 @@ function Feed() {
   } else {
     const { getFeed } = data;
     const { me } = meData;
-    console.log(getFeed);
     return (
       <>
         <Wrapper width={width}>
