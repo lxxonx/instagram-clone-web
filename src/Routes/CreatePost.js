@@ -68,6 +68,9 @@ const PostButton = styled.button`
   :focus {
     outline: none;
   }
+  img {
+    margin: auto;
+  }
 `;
 const File = styled.input`
   border: 0;

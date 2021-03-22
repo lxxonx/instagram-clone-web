@@ -48,9 +48,9 @@ const SlideIndex = styled(GoPrimitiveDot)`
   }};
 `;
 const SlideButtonLeft = styled.button`
-  background-color: ${(props) => props.theme.darkGreyColor};
+  background-color: white;
   display: ${(props) => (props.showing ? "block" : "none")};
-  color: white;
+  color: ${(props) => props.theme.darkGreyColor};
   font-stretch: ultra-expanded;
   font-weight: 900;
   position: absolute;
@@ -65,13 +65,13 @@ const SlideButtonLeft = styled.button`
     outline: none;
   }
   :hover {
-    opacity: 1;
+    opacity: 0.8;
   }
 `;
 const SlideButtonRight = styled.button`
-  background-color: ${(props) => props.theme.darkGreyColor};
+  background-color: white;
   display: ${(props) => (props.showing ? "block" : "none")};
-  color: white;
+  color: ${(props) => props.theme.darkGreyColor};
   font-weight: 900;
   position: absolute;
   right: 15px;
@@ -85,7 +85,7 @@ const SlideButtonRight = styled.button`
     outline: none;
   }
   :hover {
-    opacity: 1;
+    opacity: 0.8;
   }
 `;
 function PostPhotos({

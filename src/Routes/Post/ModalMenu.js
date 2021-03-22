@@ -4,6 +4,7 @@ import { useHistory } from "react-router";
 import { toast } from "react-toastify";
 import styled from "styled-components";
 import Modal from "../../Components/Modal";
+import { refreshPage } from "../../Components/Util";
 
 export const EDIT_POST = gql`
   mutation editPost(
@@ -52,6 +53,7 @@ function ModalMenu({ showing, setModal, id, isSelf }) {
                   toast.success(<div>The post has been removed</div>);
                 }
                 history.push("/");
+                refreshPage();
               },
             });
           }}

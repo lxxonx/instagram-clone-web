@@ -140,7 +140,7 @@ function Feed() {
   useEffect(() => {
     const fetchMoreComments = async () => {
       if (!loading) {
-        if (scrollEnd && data?.getFeed.hasMore) {
+        if (data?.getFeed.hasMore === true && scrollEnd) {
           setLoading(true);
           await fetchMore({
             variables: {
@@ -153,12 +153,13 @@ function Feed() {
       }
     };
     fetchMoreComments();
-  }, [scrollEnd, loading]);
+  }, [scrollEnd, loading, data?.getFeed, fetchMore]);
   if (!data || !meData) {
     return <Loader />;
   } else {
     const { getFeed } = data;
     const { me } = meData;
+    console.log(getFeed);
     return (
       <>
         <Wrapper width={width}>

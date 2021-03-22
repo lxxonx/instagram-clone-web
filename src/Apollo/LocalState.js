@@ -11,12 +11,14 @@ export const cache = new InMemoryCache({
       fields: {
         getFeed: {
           merge(existing, incoming, { args: { limit, cursor } }) {
+            console.log(existing);
+            console.log(incoming);
+
             const merged = existing !== undefined ? existing.feed.slice(0) : [];
             let offset = merged.length;
             for (let i = 0; i < incoming.feed.length; ++i) {
               merged[offset + i] = incoming.feed[i];
             }
-
             const result = {
               cursor: incoming.cursor,
               hasMore: incoming.hasMore,
