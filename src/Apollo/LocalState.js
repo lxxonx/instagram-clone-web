@@ -10,10 +10,6 @@ export const cache = new InMemoryCache({
       fields: {
         getFeed: {
           merge(existing, incoming) {
-            if (incoming.cursor === existing?.cursor) {
-              return existing;
-            }
-
             const merged = existing !== undefined ? existing.feed.slice(0) : [];
             let offset = merged.length;
             for (let i = 0; i < incoming.feed.length; ++i) {
@@ -43,9 +39,6 @@ export const cache = new InMemoryCache({
           keyArgs: ["postId"],
 
           merge(existing, incoming) {
-            if (incoming.cursor === existing?.cursor) {
-              return existing;
-            }
             const merged =
               existing !== undefined ? existing.comments.slice(0) : [];
             let offset = merged.length;
