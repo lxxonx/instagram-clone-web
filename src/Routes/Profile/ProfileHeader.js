@@ -80,12 +80,12 @@ const FUEButton = styled.button`
 const EditLink = styled(Link)`
   cursor: pointer;
 `;
-const FOLLOW = gql`
+export const FOLLOW = gql`
   mutation follow($username: String!) {
     follow(username: $username)
   }
 `;
-const UNFOLLOW = gql`
+export const UNFOLLOW = gql`
   mutation unfollow($username: String!) {
     unfollow(username: $username)
   }

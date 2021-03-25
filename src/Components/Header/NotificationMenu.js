@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import Avatar from "../Avatar";
 import { Link } from "react-router-dom";
 import { timeSince } from "../Util";
+import { FOLLOW, UNFOLLOW } from "../../Routes/Profile/ProfileHeader";
 
 const NEW_NOTIFICATION = gql`
   subscription newNotification {
@@ -106,12 +107,27 @@ const PostImg = styled.img`
   display: flex;
   margin-left: auto;
 `;
-const Button = styled.button`
+const FollowButton = styled.button`
+  background-color: ${(props) => props.theme.blueColor};
+  color: white;
+  padding: 7px 4px;
+  border-radius: 5px;
   display: flex;
   margin-left: auto;
+  border: 0;
+  font-size: 9px;
+  text-transform: uppercase
+    ${(props) =>
+      props.loading === "true"
+        ? `  opacity: .5;
+`
+        : null};
 `;
 
 function NotificationMenu({ notification, subscribeToMore }) {
+  const [loading, setLoading] = useState("false");
+  const [follow] = useMutation(FOLLOW);
+  const [unfollow] = useMutation(UNFOLLOW);
   useEffect(() => {
     let unsub = subscribeToMore({
       document: NEW_NOTIFICATION,
@@ -179,9 +195,27 @@ function NotificationMenu({ notification, subscribeToMore }) {
                   </Text>
                 </Content>
                 {n.newFollower.amIFollowing ? (
-                  <Button>unfollow</Button>
+                  <FollowButton
+                    loading={loading}
+                    onClick={async () => {
+                      await unfollow({
+                        variables: { username: n.newFollower.username },
+                      });
+                    }}
+                  >
+                    {loading === "true" ? "loading" : "unfollow"}
+                  </FollowButton>
                 ) : (
-                  <Button>follow</Button>
+                  <FollowButton
+                    loading={loading}
+                    onClick={async () => {
+                      await follow({
+                        variables: { username: n.newFollower.username },
+                      });
+                    }}
+                  >
+                    {loading === "true" ? "loading" : "unfollow"}
+                  </FollowButton>
                 )}
               </Notification>
             );

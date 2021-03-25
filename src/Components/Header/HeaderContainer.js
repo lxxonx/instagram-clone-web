@@ -183,13 +183,15 @@ function HeaderContainer() {
   const { data: notifData, subscribeToMore } = useQuery(NOTIFICATION);
 
   const { pathname } = useLocation();
-  const [filled, setFilled] = useState(false);
+  const [heart, setHeart] = useState(false);
   const [profileborder, setProfileBorder] = useState(false);
   const width = useWidth();
   const [open, setOpen] = useState(false);
-  const menuRef = useRef();
+  const profileMenuRef = useRef();
+  const heartMenuRef = useRef();
+
   const onClickProfile = (event) => {
-    if (filled) {
+    if (heart) {
       event.preventDefault();
     } else {
       setOpen(!open);
@@ -197,26 +199,35 @@ function HeaderContainer() {
     }
   };
   const onClickHeart = () => {
-    setFilled(!filled);
+    setHeart(!heart);
   };
 
   useEffect(() => {
-    const listener = () => {
+    const profileMenuClickAwayListener = () => {
       setOpen(!open);
       setProfileBorder(!profileborder);
     };
-    const clickAwayListener = () => {
-      setFilled(false);
+    const notificationClickAwayListener = (e) => {
+      if (!heartMenuRef.current.contains(e.target)) {
+        setHeart(false);
+      } else {
+        if (e.target.tagName === "BUTTON") {
+          setHeart(true);
+        }
+      }
     };
     myUsernameVar(data?.me?.username);
 
-    if (profileborder) window.addEventListener("click", listener);
-    if (filled) window.addEventListener("click", clickAwayListener);
+    if (profileborder)
+      window.addEventListener("click", profileMenuClickAwayListener);
+    if (heart) window.addEventListener("click", notificationClickAwayListener);
     return () => {
-      if (profileborder) window.removeEventListener("click", listener);
-      if (filled) window.removeEventListener("click", clickAwayListener);
+      if (profileborder)
+        window.removeEventListener("click", profileMenuClickAwayListener);
+      if (heart)
+        window.removeEventListener("click", notificationClickAwayListener);
     };
-  }, [profileborder, open, filled, width, data]);
+  }, [profileborder, open, heart, width, data]);
   if (loading || !data || !notifData) {
     return null;
   } else {
@@ -229,7 +240,7 @@ function HeaderContainer() {
         </Helmet>
         <Nav>
           <Box>
-            {pathname === "/" && !filled && !open ? (
+            {pathname === "/" && !heart && !open ? (
               <LogoWrapper to="/" onClick={refreshPage}>
                 <TextLogo src={"/Images/logo.png"} />
               </LogoWrapper>
@@ -242,7 +253,7 @@ function HeaderContainer() {
 
             <MenuBarWrapper>
               <MenuBar>
-                {pathname === "/" && !filled && !open ? (
+                {pathname === "/" && !heart && !open ? (
                   <LinkWrapper to="/" onClick={refreshPage}>
                     <HomeIconBlack />
                   </LinkWrapper>
@@ -252,33 +263,32 @@ function HeaderContainer() {
                   </LinkWrapper>
                 )}
                 <LinkWrapper to="/direct/inbox">
-                  {pathname.startsWith("/direct/") && !filled && !open ? (
+                  {pathname.startsWith("/direct/") && !heart && !open ? (
                     <PaperPlaneIconBlack />
                   ) : (
                     <PaperPlaneIconWhite />
                   )}
                 </LinkWrapper>
                 <LinkWrapper to="/explore/">
-                  {pathname === "/explore/" && !filled && !open ? (
+                  {pathname === "/explore/" && !heart && !open ? (
                     <CompassIconBlack />
                   ) : (
                     <CompassIcon />
                   )}
                 </LinkWrapper>
                 <HeartButton onClick={onClickHeart}>
-                  {filled ? (
+                  {heart ? (
                     <FilledHeartIcon color={"black"} />
                   ) : (
                     <EmptyHeartIcon />
                   )}
-                  <Menu showing={filled} ref={menuRef}>
-                    <NotificationMenu
-                      notification={notification}
-                      subscribeToMore={subscribeToMore}
-                    ></NotificationMenu>
-                  </Menu>
                 </HeartButton>
-
+                <Menu showing={heart} ref={heartMenuRef}>
+                  <NotificationMenu
+                    notification={notification}
+                    subscribeToMore={subscribeToMore}
+                  ></NotificationMenu>
+                </Menu>
                 <AvatarButton
                   borderAvatar={
                     pathname.startsWith(`/${me.username}`) || profileborder
@@ -286,7 +296,7 @@ function HeaderContainer() {
                   onClick={onClickProfile}
                 >
                   <MyAvatar />
-                  <Menu showing={open} ref={menuRef}>
+                  <Menu showing={open} ref={profileMenuRef}>
                     <AvatarMenu username={me.username} />
                   </Menu>
                 </AvatarButton>

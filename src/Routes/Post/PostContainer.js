@@ -154,6 +154,10 @@ const TextWrapper = styled.div`
   display: flex;
   flex-direction: column;
 `;
+const SeeMoreButton = styled.span`
+  color: gray;
+  cursor: pointer;
+`;
 function PostContainer({
   id,
   user,
@@ -397,7 +401,11 @@ function PostContainer({
               <Caption>
                 <span>
                   {caption.length > 200 ? captionArr + " ... " : caption}
-                  {caption.length > 200 && <button>see more</button>}
+                  {caption.length > 200 && (
+                    <Link to={`/p/${id}`}>
+                      <SeeMoreButton>see more</SeeMoreButton>
+                    </Link>
+                  )}
                 </span>
               </Caption>
             </Text>
@@ -413,7 +421,11 @@ function PostContainer({
                     <Link to={`/${c.user.username}`}>{c.user.username}</Link>
                   </Username>
                   <Caption>
-                    <span>{c.text}</span>
+                    <span>
+                      {c.text.length > 200
+                        ? c.text.slice(0, 200) + "..."
+                        : c.text}
+                    </span>
                   </Caption>
                 </Text>
               );
