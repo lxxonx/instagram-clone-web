@@ -3,11 +3,16 @@ import { offsetLimitPagination } from "@apollo/client/utilities";
 export const isLoggedInVar = makeVar(
   localStorage.getItem("token") === null ? false : true
 );
+export const myIdVar = makeVar("");
 export const myUsernameVar = makeVar("");
+
 export const cache = new InMemoryCache({
   typePolicies: {
     Query: {
       fields: {
+        seeProfile: {
+          keyArgs: ["username"],
+        },
         getFeed: {
           merge(existing, incoming) {
             const merged = existing !== undefined ? existing.feed.slice(0) : [];
@@ -88,9 +93,6 @@ export const cache = new InMemoryCache({
           },
         },
       },
-    },
-    User: {
-      merge: true,
     },
   },
 });

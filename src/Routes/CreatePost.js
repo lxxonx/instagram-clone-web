@@ -1,10 +1,11 @@
-import { gql, useMutation } from "@apollo/client";
-import React, { lazy, useEffect, useRef, useState } from "react";
+import { gql, useMutation, useReactiveVar } from "@apollo/client";
+import React, { useEffect, useRef, useState } from "react";
 import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 import { useForm } from "react-hook-form";
 import { GoPrimitiveDot } from "react-icons/go";
 import Spinner from "../Components/Spinner";
+import { myIdVar } from "../Apollo/LocalState";
 
 const CREATE_POST = gql`
   mutation createPost(
@@ -196,7 +197,7 @@ function CreatePost() {
   const inputFile = useRef();
   const prevSlidsButton = useRef();
   const nextSlidsButton = useRef();
-
+  const myId = useReactiveVar(myIdVar);
   const [showing, setShowing] = useState(false);
 
   const [length, setLength] = useState(1);
@@ -213,7 +214,7 @@ function CreatePost() {
       setCurrentSlide(currentSlide - 1);
     }
   };
-
+  console.log(watch("file"));
   const [createPost, { loading }] = useMutation(CREATE_POST, {
     variables: {
       location: watch("location"),
@@ -252,11 +253,18 @@ function CreatePost() {
   const onSubmit = async () => {
     let postId;
     await createPost({
-      update: (_, { data, loading, errors }) => {
-        if (errors) console.log(errors);
+      update: (cache, { data, loading }) => {
         if (!loading) {
           postId = data.createPost.id;
           history.push(`/p/${postId}`);
+          cache.modify({
+            id: `User:${myId}`,
+            fields: {
+              numberOfPosts(prev) {
+                return prev + 1;
+              },
+            },
+          });
         }
       },
     });

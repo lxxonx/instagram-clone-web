@@ -32,7 +32,6 @@ function Profile() {
   const [location, setLocation] = useState(`home`);
   const { data, loading } = useQuery(PROFILE, {
     variables: { username },
-    fetchPolicy: "no-cache",
   });
 
   useEffect(() => {
@@ -80,7 +79,7 @@ function Profile() {
                 numberOfFollowers={seeProfile.numberOfFollowers}
                 numberOfFollowings={seeProfile.numberOfFollowings}
                 numberOfPosts={seeProfile.numberOfPosts}
-                followTrue={seeProfile.amIFollowing}
+                amIFollowing={seeProfile.amIFollowing}
               />
               <ProfileNav
                 username={username}

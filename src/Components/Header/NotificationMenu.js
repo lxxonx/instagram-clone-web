@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { gql, useMutation, useQuery } from "@apollo/client";
 import Avatar from "../Avatar";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { timeSince } from "../Util";
 import { FOLLOW, UNFOLLOW } from "../../Routes/Profile/ProfileHeader";
+import ToggleFollow from "../ToggleFollow";
 
 const NEW_NOTIFICATION = gql`
   subscription newNotification {
@@ -125,9 +126,7 @@ const FollowButton = styled.button`
 `;
 
 function NotificationMenu({ notification, subscribeToMore }) {
-  const [loading, setLoading] = useState("false");
-  const [follow] = useMutation(FOLLOW);
-  const [unfollow] = useMutation(UNFOLLOW);
+  const history = useHistory();
   useEffect(() => {
     let unsub = subscribeToMore({
       document: NEW_NOTIFICATION,
@@ -154,7 +153,13 @@ function NotificationMenu({ notification, subscribeToMore }) {
                   <Avatar src={n.newComment.user.avatar} size={44} />
                   <Content>
                     <Text>
-                      <Username>{n.newComment.user.username}</Username>
+                      <Username
+                        onClick={() => {
+                          history.push(`/${n.newComment.user.username}`);
+                        }}
+                      >
+                        {n.newComment.user.username}
+                      </Username>
                       <strong>{`left a new comment: ${
                         n.newComment.text.length > 100
                           ? n.newComment.text.slice(0, 100) + "..."
@@ -174,7 +179,13 @@ function NotificationMenu({ notification, subscribeToMore }) {
                   <Avatar src={n.newLike.user.avatar} size={44} />
                   <Content>
                     <Text>
-                      <Username>{n.newLike.user.username} </Username>
+                      <Username
+                        onClick={() => {
+                          history.push(`/${n.newLike.user.username}`);
+                        }}
+                      >
+                        {n.newLike.user.username}{" "}
+                      </Username>
                       <strong>{"liked your post"}</strong>
                       <b>{ago}</b>
                     </Text>
@@ -189,34 +200,18 @@ function NotificationMenu({ notification, subscribeToMore }) {
                 <Avatar src={n.newFollower.avatar} size={44} />
                 <Content>
                   <Text>
-                    <Username>{n.newFollower.username}</Username>
+                    <Username
+                      onClick={() => {
+                        history.push(`/${n.newFollower.username}`);
+                      }}
+                    >
+                      {n.newFollower.username}
+                    </Username>
                     <strong>{"started following you"}</strong>
                     <b>{ago}</b>
                   </Text>
                 </Content>
-                {n.newFollower.amIFollowing ? (
-                  <FollowButton
-                    loading={loading}
-                    onClick={async () => {
-                      await unfollow({
-                        variables: { username: n.newFollower.username },
-                      });
-                    }}
-                  >
-                    {loading === "true" ? "loading" : "unfollow"}
-                  </FollowButton>
-                ) : (
-                  <FollowButton
-                    loading={loading}
-                    onClick={async () => {
-                      await follow({
-                        variables: { username: n.newFollower.username },
-                      });
-                    }}
-                  >
-                    {loading === "true" ? "loading" : "unfollow"}
-                  </FollowButton>
-                )}
+                <ToggleFollow username={n.newFollower.username} />
               </Notification>
             );
           }

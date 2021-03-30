@@ -19,7 +19,7 @@ import AvatarMenu from "./AvatarMenu";
 import NotificationMenu from "./NotificationMenu";
 import SearchInput from "./SearchInput";
 import { Menu } from "./Styles";
-import { myUsernameVar } from "../../Apollo/LocalState";
+import { myIdVar, myUsernameVar } from "../../Apollo/LocalState";
 import { gql, useQuery } from "@apollo/client";
 import { ME } from "../SharedQueries";
 const NOTIFICATION = gql`
@@ -216,8 +216,8 @@ function HeaderContainer() {
         }
       }
     };
+    myIdVar(data?.me?.id);
     myUsernameVar(data?.me?.username);
-
     if (profileborder)
       window.addEventListener("click", profileMenuClickAwayListener);
     if (heart) window.addEventListener("click", notificationClickAwayListener);
@@ -233,6 +233,7 @@ function HeaderContainer() {
   } else {
     const { me } = data;
     const { notification } = notifData;
+
     return (
       <>
         <Helmet>

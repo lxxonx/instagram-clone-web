@@ -108,11 +108,9 @@ function ProfileHeader({
   numberOfFollowers,
   fullname,
   bio,
-  followTrue,
+  amIFollowing,
 }) {
   const history = useHistory();
-  const [amIFollowing, setAmIFollowing] = useState(followTrue);
-  const [followers, setFollowers] = useState(numberOfFollowers);
   const [follow] = useMutation(FOLLOW, {
     variables: { username },
   });
@@ -154,20 +152,38 @@ function ProfileHeader({
     switch (name) {
       case "follow":
         await follow({
-          update: ({ loading }) => {
-            if (!loading) {
-              setAmIFollowing(true);
-              setFollowers(followers + 1);
+          update: (cache, { data }) => {
+            if (data?.follow) {
+              cache.modify({
+                id: `User:${id}`,
+                fields: {
+                  amIFollowing() {
+                    return true;
+                  },
+                  numberOfFollowers(prev) {
+                    return prev + 1;
+                  },
+                },
+              });
             }
           },
         });
         break;
       case "unfollow":
         await unfollow({
-          update: ({ loading }) => {
-            if (!loading) {
-              setAmIFollowing(false);
-              setFollowers(followers - 1);
+          update: (cache, { data }) => {
+            if (data?.unfollow) {
+              cache.modify({
+                id: `User:${id}`,
+                fields: {
+                  amIFollowing() {
+                    return false;
+                  },
+                  numberOfFollowers(prev) {
+                    return prev - 1;
+                  },
+                },
+              });
             }
           },
         });
@@ -230,7 +246,7 @@ function ProfileHeader({
               게시물 <strong>{numberOfPosts}</strong>
             </NumberText>
             <NumberText>
-              팔로워 <strong>{followers}</strong>
+              팔로워 <strong>{numberOfFollowers}</strong>
             </NumberText>
             <NumberText>
               팔로잉 <strong>{numberOfFollowings}</strong>

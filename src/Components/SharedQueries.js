@@ -2,6 +2,7 @@ import { gql } from "@apollo/client";
 export const ME = gql`
   query meData {
     me {
+      id
       username
       fullname
       posts {
