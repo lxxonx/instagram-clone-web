@@ -3,7 +3,8 @@ import PropTypes from "prop-types";
 import styled from "styled-components";
 import useWidth from "../Hooks/useWidth";
 
-const FooterTag = styled.footer`
+const Container = styled.footer`
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -57,7 +58,7 @@ const Footer = ({ signUpPage, feed }) => {
   const width = useWidth();
   console.log(width);
   return (
-    <FooterTag>
+    <Container>
       <ListWrapper numberOfLines={width < 600 || feed ? 2 : 1}>
         <List feed={feed}>
           <ListItem>
@@ -123,7 +124,7 @@ const Footer = ({ signUpPage, feed }) => {
         <Language href="#">language</Language> &copy; {new Date().getFullYear()}{" "}
         Instaclone
       </Copyright>
-    </FooterTag>
+    </Container>
   );
 };
 Footer.propTypes = {
