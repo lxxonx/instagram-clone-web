@@ -42,7 +42,6 @@ export const cache = new InMemoryCache({
 
         getMoreComments: {
           keyArgs: ["postId"],
-
           merge(existing, incoming) {
             const merged =
               existing !== undefined ? existing.comments.slice(0) : [];
@@ -57,7 +56,6 @@ export const cache = new InMemoryCache({
             };
             return result;
           },
-
           read(existing) {
             if (existing) {
               return {

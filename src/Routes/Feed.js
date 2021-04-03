@@ -138,7 +138,7 @@ function Feed() {
   const [loading, setLoading] = useState(false);
   const scrollEnd = useScrollEnd();
   useEffect(() => {
-    const fetchMoreComments = async () => {
+    const fetchMoreFeed = async () => {
       if (!loading) {
         if (data?.getFeed.hasMore === true && scrollEnd) {
           setLoading(true);
@@ -152,7 +152,7 @@ function Feed() {
         setLoading(false);
       }
     };
-    fetchMoreComments();
+    fetchMoreFeed();
   }, [scrollEnd, loading, data?.getFeed, fetchMore]);
   if (!data || !meData) {
     return <Loader />;

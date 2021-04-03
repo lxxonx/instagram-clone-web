@@ -115,7 +115,7 @@ const Comment = styled.div`
 `;
 const CommentsText = styled.div`
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
 `;
 const Text = styled.div`
   padding: 0;

@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
+import useWidth from "../Hooks/useWidth";
 
 const FooterTag = styled.footer`
   display: flex;
@@ -13,8 +14,9 @@ const FooterTag = styled.footer`
 `;
 const ListWrapper = styled.div`
   display: flex;
-  flex-direction: ${(props) => (props.feed ? "column" : "row")};
+  flex-direction: ${(props) => (props.numberOfLines === 2 ? "column" : "row")};
   align-items: center;
+  justify-content: center;
 `;
 const List = styled.ul`
   display: flex;
@@ -25,6 +27,8 @@ const List = styled.ul`
       : `&:not(:last-child) {
     margin-right: 16px;
   }`}
+  align-items: center;
+  justify-content: center;
 `;
 
 const ListItem = styled.li`
@@ -50,9 +54,11 @@ const Language = styled.select`
 `;
 
 const Footer = ({ signUpPage, feed }) => {
+  const width = useWidth();
+  console.log(width);
   return (
     <FooterTag>
-      <ListWrapper feed={feed}>
+      <ListWrapper numberOfLines={width < 600 || feed ? 2 : 1}>
         <List feed={feed}>
           <ListItem>
             <Link href="#">about</Link>
