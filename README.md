@@ -7,9 +7,9 @@
     Node.js backend app for Instagram-clone
     <br />
     <br />
-    <a href="https://instagram-clone-web-rixygvfnf-devleeon.vercel.app/#/">View Demo</a>
+    <a href="https://insta.lxxonx.xyz/#/">View Demo</a>
     ·
-    <a href="https://github.com/devleeon/instagram-clone-web/issues">Report Bug</a>
+    <a href="https://github.com/lxxonx/instagram-clone-web/issues">Report Bug</a>
   </p>
 </p>
 
