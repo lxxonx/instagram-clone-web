@@ -84,7 +84,7 @@ Explore
 
 Wonchang Lee 이 원창 - [@lxxonx.xyz](https://www.instagram.com/lxxonx.xyz/) - leeonechang92@gmail.com
 
-Project Link: [https://github.com/devleeon/instagram-clone-web](https://github.com/devleeon/instagram-clone-web)
+Project Link: [https://github.com/lxxonx/instagram-clone-web](https://github.com/lxxonx/instagram-clone-web)
 
 <!-- ACKNOWLEDGEMENTS -->
 
